@@ -220,7 +220,7 @@ const resources = {
 
 i18n.use(initReactI18next).init({
 	resources,
-	lng: "my", // default language
+	lng: localStorage.getItem("language") ?? "my", // default language my if not language token been set
 	fallbackLng: "my",
 	interpolation: {
 		escapeValue: false, // react already safes from xss
