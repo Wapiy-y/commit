@@ -119,7 +119,7 @@ app.post("/auth/register", async (req, res) => {
 		const [user] = await sql`
       INSERT INTO users (email, name, password_hash)
       VALUES (${email}, ${name}, ${passwordHash})
-      RETURNING id, email, name
+      RETURNING email, name
     `;
 		const token = jwt.sign({ userId: user.id }, JWT_SECRET);
 		res.status(201).json({ token, user });
@@ -146,7 +146,7 @@ app.post("/auth/login", async (req, res) => {
 		const token = jwt.sign({ userId: user.id }, JWT_SECRET);
 		res.json({
 			token,
-			user: { id: user.id, email: user.email, name: user.name },
+			user: { email: user.email, name: user.name },
 		});
 	} catch (err) {
 		console.error("login error:", err);
@@ -157,7 +157,7 @@ app.post("/auth/login", async (req, res) => {
 app.get("/auth/me", requireAuth, async (req, res) => {
 	try {
 		const [user] =
-			await sql`SELECT id, email, name FROM users WHERE id = ${req.userId}`;
+			await sql`SELECT email, name FROM users WHERE id = ${req.userId}`;
 		if (!user) return res.status(404).json({ error: "User not found" });
 		res.json({ user });
 	} catch {
