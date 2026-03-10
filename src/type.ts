@@ -22,7 +22,6 @@ export interface NewBill {
 }
 
 export interface User {
-	id: number;
 	email: string;
 	name: string;
 }
