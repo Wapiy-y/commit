@@ -138,6 +138,7 @@ export default function App() {
 	const toggleLanguage = () => {
 		const newLang = i18n.language === "en" ? "my" : "en";
 		i18n.changeLanguage(newLang);
+		localStorage.setItem("language", newLang);
 	};
 
 	if (authChecking) {
