@@ -1,6 +1,6 @@
 import { addMonths, format, subMonths } from "date-fns";
 import { Home, Menu, Receipt } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { fetchMe, UnauthorizedError } from "./api/auth";
@@ -28,21 +28,26 @@ export default function App() {
 	const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.HOME);
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const [bills, setBills] = useState<Bill[]>([]);
-
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	// Prevent loadBills from firing twice on mount when user is cached
+	const billsFetchedRef = useRef(false);
 
 	const currentMonthYear = format(currentDate, "yyyy-MM");
 	const todayMonthYear = format(new Date(), "yyyy-MM");
 	const isCurrentMonth = currentMonthYear === todayMonthYear;
 
-	// Verify token on mount
+	// Verify token on mount — silent refresh, does NOT trigger loadBills
 	useEffect(() => {
 		if (!token) return;
 		fetchMe()
 			.then((u) => {
-				setUser(u);
 				localStorage.setItem("user", JSON.stringify(u));
+				setUser((prev) => {
+					if (JSON.stringify(prev) === JSON.stringify(u)) return prev;
+					return u;
+				});
 			})
 			.catch((err) => {
 				if (err instanceof UnauthorizedError) {
@@ -54,11 +59,17 @@ export default function App() {
 			});
 	}, [token]);
 
+	// Load bills when user is available or month changes
 	useEffect(() => {
-		if (user) loadBills();
+		if (!user) return;
+		if (!billsFetchedRef.current || currentMonthYear) {
+			billsFetchedRef.current = true;
+			loadBills();
+		}
 	}, [currentMonthYear, user]);
 
 	const handleLogin = (newToken: string, loggedInUser: User) => {
+		billsFetchedRef.current = false;
 		setToken(newToken);
 		setUser(loggedInUser);
 		localStorage.setItem("user", JSON.stringify(loggedInUser));
@@ -67,6 +78,7 @@ export default function App() {
 	const logout = () => {
 		localStorage.removeItem("token");
 		localStorage.removeItem("user");
+		billsFetchedRef.current = false;
 		setToken(null);
 		setUser(null);
 		setBills([]);
@@ -128,7 +140,6 @@ export default function App() {
 		i18n.changeLanguage(newLang);
 	};
 
-	// Checking token validity on first load — show spinner
 	if (authChecking) {
 		return (
 			<div className="min-h-screen bg-zinc-50 flex items-center justify-center">
