@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy — Bilku</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: #f7f7f5;
+      color: #1a1a18;
+      min-height: 100vh;
+      padding: 2rem 1rem 5rem;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .header {
+      padding: 3rem 0 2.5rem;
+      border-bottom: 1px solid #e8e8e4;
+      margin-bottom: 2rem;
+    }
+
+    .app-name {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #7a7a72;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: #7a7a72;
+      font-weight: 300;
+    }
+
+    section {
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7a7a72;
+      margin-bottom: 0.875rem;
+    }
+
+    p {
+      font-size: 0.875rem;
+      color: #4a4a44;
+      line-height: 1.75;
+      font-weight: 300;
+    }
+
+    ul {
+      list-style: none;
+      margin-top: 0.25rem;
+    }
+
+    ul li {
+      font-size: 0.875rem;
+      color: #4a4a44;
+      font-weight: 300;
+      line-height: 1.75;
+      padding-left: 1rem;
+      position: relative;
+    }
+
+    ul li::before {
+      content: "—";
+      position: absolute;
+      left: 0;
+      color: #c8c8c0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7a7a72;
+      padding: 0 0 0.625rem;
+      border-bottom: 1px solid #e8e8e4;
+    }
+
+    td {
+      font-size: 0.8125rem;
+      font-weight: 300;
+      color: #4a4a44;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid #e8e8e4;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    td:last-child { text-align: right; }
+
+    .tag {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+    }
+
+    .tag.enc { background: #edf7f3; color: #18a06b; }
+    .tag.plain { background: #f4f4f2; color: #7a7a72; }
+
+    .promise {
+      background: #ffffff;
+      border: 1px solid #e8e8e4;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .promise p {
+      font-size: 0.875rem;
+      color: #4a4a44;
+      line-height: 1.75;
+    }
+
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e8e8e4;
+    }
+
+    .footer a {
+      font-size: 0.8125rem;
+      color: #7a7a72;
+      text-decoration: none;
+      font-weight: 400;
+      transition: color 0.2s;
+    }
+
+    .footer a:hover { color: #1a1a18; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <p class="app-name">Bilku</p>
+    </div>
+
+    <section>
+      <h2>What We Collect</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Email address</td><td><span class="tag plain">Plain</span></td></tr>
+          <tr><td>Name</td><td><span class="tag plain">Plain</span></td></tr>
+          <tr><td>Password</td><td><span class="tag enc">Hashed</span></td></tr>
+          <tr><td>Bill names</td><td><span class="tag enc">Encrypted</span></td></tr>
+          <tr><td>Bill amounts</td><td><span class="tag plain">Plain</span></td></tr>
+          <tr><td>Notes</td><td><span class="tag enc">Encrypted</span></td></tr>
+          <tr><td>Category / Due day</td><td><span class="tag plain">Plain</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>How We Protect It</h2>
+      <p>Bill names and notes are encrypted with AES-256-GCM before being stored. Passwords are hashed with bcrypt and cannot be recovered. Even with direct database access, sensitive fields are unreadable.</p>
+    </section>
+
+    <section>
+      <h2>How We Use It</h2>
+      <ul>
+        <li>To show your bills and payment history</li>
+        <li>To keep your account secure</li>
+        <li>We do not sell or share your data</li>
+        <li>We do not use it for advertising</li>
+      </ul>
+    </section>
+
+    <div class="footer">
+      <a href="/">Back to Bilku</a>
+    </div>
+
+  </div>
+</body>
+</html>
