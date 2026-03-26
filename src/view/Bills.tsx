@@ -377,7 +377,7 @@ function FilterBar({
 			{/* Toggle row */}
 			<button
 				onClick={() => setExpanded((v) => !v)}
-				className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
+				className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors  border border-zinc-200 shadow-sm"
 			>
 				<div className="flex items-center gap-2">
 					<SlidersHorizontal size={15} className="text-zinc-400" />
