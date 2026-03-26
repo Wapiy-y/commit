@@ -26,7 +26,7 @@ export function SummaryCard({
 			<div className="space-y-4">
 				<div className="flex justify-between text-sm">
 					<span className="text-zinc-500">{t("paid")}</span>
-					<span className="font-medium text-emerald-600">
+					<span className="font-medium text-zinc-900">
 						RM {totalPaid.toFixed(2)}
 					</span>
 				</div>
@@ -38,7 +38,7 @@ export function SummaryCard({
 				</div>
 				<div className="flex justify-between text-sm">
 					<span className="text-zinc-500">{t("true_paid")}</span>
-					<span className="font-medium text-zinc-900">
+					<span className="font-medium text-emerald-600">
 						RM {trueTotalPaid.toFixed(2)}
 					</span>
 				</div>

@@ -46,7 +46,7 @@ export enum CategoryList {
 
 	// Finance
 	LOAN = "loan",
-	CREDIT_CARD = "installment",
+	CREDIT_CARD = "credit card",
 	INSURANCE = "insurance",
 	INVESTMENT = "investment",
 	INSTALLMENT = "installment",
