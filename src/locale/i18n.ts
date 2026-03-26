@@ -14,8 +14,9 @@ const resources = {
 			//summary card
 			home_title: "Home",
 			total_commitment: "Total Commitment (estimate)",
-			paid: "Paid",
-			remaining: "Remaining",
+			paid: "Total Paid (estimate)",
+			true_paid: "Total Paid",
+			remaining: "Remaining (estimate)",
 			//stats card
 			total_paid: "Paid",
 			total_bill: "Bill",
@@ -120,8 +121,9 @@ const resources = {
 			// summary card
 			home_title: "Utama",
 			total_commitment: "Jumlah Komitmen (anggaran)",
-			paid: "Telah Dibayar",
-			remaining: "Baki",
+			paid: "Telah Dibayar (anggaran)",
+			true_paid: "Telah Dibayar",
+			remaining: "Baki (anggaran)",
 
 			// stats card
 			total_paid: "Dibayar",

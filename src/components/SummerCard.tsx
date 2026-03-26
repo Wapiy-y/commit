@@ -4,7 +4,7 @@ interface SummaryCardProps {
 	totalCommitment: number;
 	totalPaid: number;
 	totalUnpaid: number;
-	progress: number;
+	trueTotalPaid: number;
 	t: TFunction;
 }
 
@@ -12,7 +12,7 @@ export function SummaryCard({
 	totalCommitment,
 	totalPaid,
 	totalUnpaid,
-	progress,
+	trueTotalPaid,
 	t,
 }: SummaryCardProps) {
 	return (
@@ -24,24 +24,22 @@ export function SummaryCard({
 				RM {totalCommitment.toFixed(2)}
 			</div>
 			<div className="space-y-4">
-				<div>
-					<div className="flex justify-between text-sm mb-2">
-						<span className="text-zinc-500">{t("paid")}</span>
-						<span className="font-medium text-emerald-600">
-							RM {totalPaid.toFixed(2)}
-						</span>
-					</div>
-					<div className="h-2 bg-zinc-100 rounded-full overflow-hidden">
-						<div
-							className="h-full bg-emerald-500 transition-all duration-500"
-							style={{ width: `${Math.min(progress, 100)}%` }}
-						/>
-					</div>
+				<div className="flex justify-between text-sm">
+					<span className="text-zinc-500">{t("paid")}</span>
+					<span className="font-medium text-emerald-600">
+						RM {totalPaid.toFixed(2)}
+					</span>
 				</div>
 				<div className="flex justify-between text-sm">
 					<span className="text-zinc-500">{t("remaining")}</span>
 					<span className="font-medium text-zinc-900">
 						RM {Math.max(totalUnpaid, 0).toFixed(2)}
+					</span>
+				</div>
+				<div className="flex justify-between text-sm">
+					<span className="text-zinc-500">{t("true_paid")}</span>
+					<span className="font-medium text-zinc-900">
+						RM {trueTotalPaid.toFixed(2)}
 					</span>
 				</div>
 			</div>
