@@ -107,6 +107,16 @@ const resources = {
 			//ANALYTIC
 			analytics_title: "Analytic",
 			language: "Language",
+
+			//FILTER
+			filter: "Filter",
+			status: "Status",
+			filter_all: "All",
+			filter_paid: "Paid",
+			filter_unpaid: "Unpaid",
+			category_filter: "Category",
+			clear_filters: "Clear all filters",
+			no_bills_match_filter: "No bills match your filters",
 		},
 	},
 	my: {
@@ -216,6 +226,16 @@ const resources = {
 			//ANALYTIC
 			analytics_title: "Analitik",
 			language: "Bahasa",
+
+			//FILTER
+			filter: "Tapis",
+			status: "Status",
+			filter_all: "Semua",
+			filter_paid: "Dibayar",
+			filter_unpaid: "Belum Dibayar",
+			category_filter: "Kategori",
+			clear_filters: "Kosongkan semua tapisan",
+			no_bills_match_filter: "Tiada bil yang sesuai dengan tapisan anda",
 		},
 	},
 };
