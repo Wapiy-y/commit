@@ -209,6 +209,55 @@ app.get("/bills", requireAuth, async (req, res) => {
 	}
 });
 
+app.get("/bills/summary", requireAuth, async (req, res) => {
+	const { month } = req.query;
+	if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+		return res.status(400).json({ error: "Invalid month format. Use YYYY-MM" });
+	}
+	try {
+		const [summary] = await sql`
+      SELECT
+        COUNT(*)::int                                                          AS total_bills,
+        COUNT(CASE WHEN COALESCE(p.is_paid, false) THEN 1 END)::int           AS paid_count,
+        COUNT(CASE WHEN NOT COALESCE(p.is_paid, false) THEN 1 END)::int       AS unpaid_count,
+        COALESCE(SUM(b.amount), 0)::float                                      AS total_commitment,
+        COALESCE(SUM(CASE WHEN COALESCE(p.is_paid, false) THEN b.amount ELSE 0 END), 0)::float
+                                                                               AS total_paid,
+        COALESCE(SUM(CASE WHEN NOT COALESCE(p.is_paid, false) THEN b.amount ELSE 0 END), 0)::float
+                                                                               AS total_unpaid,
+        COALESCE(SUM(CASE WHEN COALESCE(p.is_paid, false) THEN COALESCE(p.amount, 0) ELSE 0 END), 0)::float
+                                                                               AS true_total_paid,
+        COUNT(CASE WHEN COALESCE(p.is_paid, false) AND COALESCE(p.amount, 0) = b.amount THEN 1 END)::int
+                                                                               AS exact_count,
+        COUNT(CASE WHEN COALESCE(p.is_paid, false) AND COALESCE(p.amount, 0) < b.amount THEN 1 END)::int
+                                                                               AS underpaid_count,
+        COALESCE(SUM(CASE WHEN COALESCE(p.is_paid, false) AND COALESCE(p.amount, 0) < b.amount
+          THEN b.amount - COALESCE(p.amount, 0) ELSE 0 END), 0)::float        AS total_shortfall,
+        COUNT(CASE WHEN COALESCE(p.is_paid, false) AND COALESCE(p.amount, 0) > b.amount THEN 1 END)::int
+                                                                               AS overpaid_count,
+        COALESCE(SUM(CASE WHEN COALESCE(p.is_paid, false) AND COALESCE(p.amount, 0) > b.amount
+          THEN COALESCE(p.amount, 0) - b.amount ELSE 0 END), 0)::float        AS total_excess
+      FROM bills b
+      LEFT JOIN payments p ON p.bill_id = b.id AND p.month_year = ${month}
+      WHERE
+        b.user_id = ${req.userId}
+        AND b.is_active = true
+        AND TO_CHAR(b.start_date, 'YYYY-MM') <= ${month}
+        AND (
+          b.duration_months IS NULL
+          OR TO_CHAR(
+            b.start_date + (b.duration_months - 1 || ' months')::interval,
+            'YYYY-MM'
+          ) >= ${month}
+        )
+    `;
+		res.json(summary);
+	} catch (err) {
+		console.error("fetch summary error:", err);
+		res.status(500).json({ error: "Failed to fetch summary" });
+	}
+});
+
 app.post("/bills", requireAuth, async (req, res) => {
 	const {
 		name,

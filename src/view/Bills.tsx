@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AddBillModal } from "@/components/AddBillModal";
 import { BillCard } from "@/components/BillCard";
+import { BillsSkeleton } from "@/components/BillsSkeleton";
 import { FilterBar, type PaidFilter } from "@/components/FilterBar";
 import { PaymentConfirmModal } from "@/components/PaymentConfirmModal";
 import type { Bill, NewBill } from "@/type";
@@ -159,9 +160,7 @@ export default function Bills({
 
 			<div className="space-y-3">
 				{loading ? (
-					<div className="text-center py-8 text-zinc-400">
-						{t("loading_bills")}
-					</div>
+					<BillsSkeleton />
 				) : filteredBills.length === 0 ? (
 					<div className="text-center py-8 text-zinc-400">
 						{bills.length > 0

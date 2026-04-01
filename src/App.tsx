@@ -3,11 +3,17 @@ import { Home, Menu, Receipt } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchMe, UnauthorizedError } from "./api/auth";
-import { addBill, deleteBill, fetchBills, updatePayment } from "./api/bills";
+import {
+	addBill,
+	deleteBill,
+	fetchBills,
+	fetchBillsSummary,
+	updatePayment,
+} from "./api/bills";
 import { Header } from "./components/Header";
 import { NavButton } from "./components/NavButton";
 import { useToast } from "./components/Toast";
-import type { Bill, NewBill, User } from "./type";
+import type { Bill, BillSummary, NewBill, User } from "./type";
 import { ActiveTab } from "./type";
 import { Content } from "./view/Content";
 import Login from "./view/login";
@@ -30,17 +36,18 @@ export default function App() {
 	const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.HOME);
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const [bills, setBills] = useState<Bill[]>([]);
+	const [summary, setSummary] = useState<BillSummary | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	// Prevent loadBills from firing twice on mount when user is cached
-	const billsFetchedRef = useRef(false);
+	// Tracks which month's bills are currently loaded — null means not yet loaded
+	const billsMonthRef = useRef<string | null>(null);
 
 	const currentMonthYear = format(currentDate, "yyyy-MM");
 	const todayMonthYear = format(new Date(), "yyyy-MM");
 	const isCurrentMonth = currentMonthYear === todayMonthYear;
 
-	// Verify token on mount — silent refresh, does NOT trigger loadBills
+	// Verify token on mount — silent refresh
 	useEffect(() => {
 		if (!token) return;
 		fetchMe()
@@ -61,17 +68,25 @@ export default function App() {
 			});
 	}, [token]);
 
-	// Load bills when user is available or month changes
+	// Summary: load eagerly on mount and whenever month changes
 	useEffect(() => {
 		if (!user) return;
-		if (!billsFetchedRef.current || currentMonthYear) {
-			billsFetchedRef.current = true;
-			loadBills();
-		}
+		loadSummary();
 	}, [currentMonthYear, user]);
 
+	// Bills: load lazily — only when the user actually visits the bill tab
+	useEffect(() => {
+		if (!user) return;
+		if (
+			activeTab === ActiveTab.BILL &&
+			billsMonthRef.current !== currentMonthYear
+		) {
+			loadBillsList();
+		}
+	}, [activeTab, currentMonthYear, user]);
+
 	const handleLogin = (newToken: string, loggedInUser: User) => {
-		billsFetchedRef.current = false;
+		billsMonthRef.current = null;
 		setToken(newToken);
 		setUser(loggedInUser);
 		localStorage.setItem("user", JSON.stringify(loggedInUser));
@@ -80,22 +95,68 @@ export default function App() {
 	const logout = () => {
 		localStorage.removeItem("token");
 		localStorage.removeItem("user");
-		billsFetchedRef.current = false;
+		billsMonthRef.current = null;
 		setToken(null);
 		setUser(null);
 		setBills([]);
+		setSummary(null);
 	};
 
-	const loadBills = async () => {
+	const handleAuthError = () => logout();
+
+	const loadSummary = async () => {
+		setLoading(true);
+		setError(null);
+		try {
+			const data = await fetchBillsSummary(currentMonthYear);
+			setSummary(data);
+		} catch (err) {
+			if (err instanceof Error && err.message === "UNAUTHORIZED") {
+				handleAuthError();
+			} else {
+				setError(t("failed_load_bill"));
+				toast.error(t("failed_load_bill"));
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const loadBillsList = async () => {
 		setLoading(true);
 		setError(null);
 		try {
 			const data = await fetchBills(currentMonthYear);
 			setBills(data);
+			billsMonthRef.current = currentMonthYear;
 			toast.success(t("bills_loaded"));
 		} catch (err) {
 			if (err instanceof Error && err.message === "UNAUTHORIZED") {
-				logout();
+				handleAuthError();
+			} else {
+				setError(t("failed_load_bill"));
+				toast.error(t("failed_load_bill"));
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	// Reload both after mutations (add / delete)
+	const reloadAll = async () => {
+		setLoading(true);
+		setError(null);
+		try {
+			const [billsData, summaryData] = await Promise.all([
+				fetchBills(currentMonthYear),
+				fetchBillsSummary(currentMonthYear),
+			]);
+			setBills(billsData);
+			setSummary(summaryData);
+			billsMonthRef.current = currentMonthYear;
+		} catch (err) {
+			if (err instanceof Error && err.message === "UNAUTHORIZED") {
+				handleAuthError();
 			} else {
 				setError(t("failed_load_bill"));
 				toast.error(t("failed_load_bill"));
@@ -107,7 +168,7 @@ export default function App() {
 
 	const handleAddBill = async (newBill: NewBill) => {
 		await addBill(newBill);
-		loadBills();
+		reloadAll();
 	};
 
 	const handleUpdatePayment = async (bill: Bill, amount: string) => {
@@ -125,6 +186,9 @@ export default function App() {
 
 		try {
 			await updatePayment(bill.id, currentMonthYear, numAmount);
+			fetchBillsSummary(currentMonthYear)
+				.then(setSummary)
+				.catch(() => {});
 		} catch {
 			setBills(originalBills);
 			toast.error(t("update_payment_error"));
@@ -134,7 +198,7 @@ export default function App() {
 	const handleDeleteBill = async (id: number) => {
 		if (!confirm(t("delete_bill_confirm"))) return;
 		await deleteBill(id);
-		loadBills();
+		reloadAll();
 	};
 
 	const toggleLanguage = () => {
@@ -173,6 +237,7 @@ export default function App() {
 				setActiveTab={setActiveTab}
 				user={user}
 				bills={bills}
+				summary={summary}
 				loading={loading}
 				error={error}
 				isCurrentMonth={isCurrentMonth}

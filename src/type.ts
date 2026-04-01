@@ -21,6 +21,21 @@ export interface NewBill {
 	notes: string;
 }
 
+export interface BillSummary {
+	total_bills: number;
+	paid_count: number;
+	unpaid_count: number;
+	total_commitment: number;
+	total_paid: number;
+	total_unpaid: number;
+	true_total_paid: number;
+	exact_count: number;
+	underpaid_count: number;
+	total_shortfall: number;
+	overpaid_count: number;
+	total_excess: number;
+}
+
 export interface User {
 	email: string;
 	name: string;
