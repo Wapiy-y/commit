@@ -70,7 +70,7 @@ export default function Menu({
 			</button>
 
 			<div className="mt-8 mb-4 text-center">
-				<p className="text-xs text-zinc-300 font-mono">v1.0</p>
+				<p className="text-xs text-zinc-300 font-mono">v3.0</p>
 			</div>
 		</div>
 	);
