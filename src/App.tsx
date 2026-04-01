@@ -1,12 +1,12 @@
-import { addMonths, format, subMonths } from "date-fns";
+import { format } from "date-fns";
 import { Home, Menu, Receipt } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { fetchMe, UnauthorizedError } from "./api/auth";
 import { addBill, deleteBill, fetchBills, updatePayment } from "./api/bills";
 import { Header } from "./components/Header";
 import { NavButton } from "./components/NavButton";
+import { useToast } from "./components/Toast";
 import type { Bill, NewBill, User } from "./type";
 import { ActiveTab } from "./type";
 import { Content } from "./view/Content";
@@ -24,6 +24,8 @@ export default function App() {
 	const [authChecking, setAuthChecking] = useState(
 		!!localStorage.getItem("token"),
 	);
+
+	const toast = useToast();
 
 	const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.HOME);
 	const [currentDate, setCurrentDate] = useState(new Date());
@@ -163,8 +165,7 @@ export default function App() {
 			<Header
 				activeTab={activeTab}
 				currentDate={currentDate}
-				onPrevMonth={() => setCurrentDate((d) => subMonths(d, 1))}
-				onNextMonth={() => setCurrentDate((d) => addMonths(d, 1))}
+				onSelectDate={(date) => setCurrentDate(date)}
 			/>
 
 			<Content

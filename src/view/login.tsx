@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
 import type React from "react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { login, register } from "@/api/auth";
+import { useToast } from "@/components/Toast";
 import type { User } from "@/type";
 
 interface LoginProps {
@@ -16,6 +16,7 @@ export default function Login({ onLogin, t }: LoginProps) {
 	const [authPassword, setAuthPassword] = useState("");
 	const [authName, setAuthName] = useState("");
 	const [authLoading, setAuthLoading] = useState(false);
+	const toast = useToast();
 
 	const handleAuth = async (e: React.SubmitEvent) => {
 		e.preventDefault();

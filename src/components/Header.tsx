@@ -1,20 +1,17 @@
-import { format } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ActiveTab } from "../type";
+import { MonthPicker } from "./MonthPicker";
 
 interface HeaderProps {
 	activeTab: ActiveTab;
 	currentDate: Date;
-	onPrevMonth: () => void;
-	onNextMonth: () => void;
+	onSelectDate: (date: Date) => void;
 }
 
 export const Header = ({
 	activeTab,
 	currentDate,
-	onPrevMonth,
-	onNextMonth,
+	onSelectDate,
 }: HeaderProps) => {
 	const { t } = useTranslation();
 
@@ -29,25 +26,7 @@ export const Header = ({
 							: t("menu_title")}
 				</h1>
 				{activeTab !== ActiveTab.MENU && (
-					<div className="flex items-center gap-2">
-						<div className="flex items-center gap-1 bg-zinc-100 rounded-lg p-1">
-							<button
-								onClick={onPrevMonth}
-								className="p-1 hover:bg-white rounded-md transition-colors"
-							>
-								<ChevronLeft size={16} />
-							</button>
-							<span className="text-sm font-medium w-20 text-center">
-								{format(currentDate, "MMM yyyy")}
-							</span>
-							<button
-								onClick={onNextMonth}
-								className="p-1 hover:bg-white rounded-md transition-colors"
-							>
-								<ChevronRight size={16} />
-							</button>
-						</div>
-					</div>
+					<MonthPicker currentDate={currentDate} onSelectDate={onSelectDate} />
 				)}
 			</div>
 		</header>
