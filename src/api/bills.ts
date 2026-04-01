@@ -1,4 +1,4 @@
-import type { Bill, NewBill } from "@/type";
+import type { Bill, BillSummary, NewBill } from "@/type";
 import { authHeaders } from "./auth";
 
 export const fetchBills = async (monthYear: string): Promise<Bill[]> => {
@@ -7,6 +7,17 @@ export const fetchBills = async (monthYear: string): Promise<Bill[]> => {
 	});
 	if (res.status === 401) throw new Error("UNAUTHORIZED");
 	if (!res.ok) throw new Error("Failed to fetch bills");
+	return res.json();
+};
+
+export const fetchBillsSummary = async (
+	monthYear: string,
+): Promise<BillSummary> => {
+	const res = await fetch(`/api/bills/summary?month=${monthYear}`, {
+		headers: authHeaders(),
+	});
+	if (res.status === 401) throw new Error("UNAUTHORIZED");
+	if (!res.ok) throw new Error("Failed to fetch summary");
 	return res.json();
 };
 

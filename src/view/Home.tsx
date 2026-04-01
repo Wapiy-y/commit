@@ -5,56 +5,25 @@ import {
 	TrendingDown,
 	TrendingUp,
 } from "lucide-react";
+import { HomeSkeleton } from "@/components/HomeSkeleton";
 import { StatCard } from "@/components/StatCard";
 import { SummaryCard } from "@/components/SummerCard";
-import type { Bill } from "@/type";
+import type { BillSummary } from "@/type";
 
 interface DashboardProps {
 	userName: string;
-	bills: Bill[];
+	summary: BillSummary | null;
+	loading: boolean;
 	t: TFunction;
 }
 
-export default function Home({ userName, bills, t }: DashboardProps) {
-	const totalCommitment = bills.reduce(
-		(acc, bill) => acc + parseFloat(bill.amount),
-		0,
-	);
-	const totalPaid = bills
-		.filter((bill) => bill.is_paid === true)
-		.reduce((acc, bill) => acc + parseFloat(bill.amount), 0);
-
-	const totalUnpaid = bills
-		.filter((bill) => bill.is_paid === false)
-		.reduce((acc, bill) => acc + parseFloat(bill.amount), 0);
-
-	const trueTotalPaid = bills
-		.filter((bill) => bill.is_paid === true)
-		.reduce((acc, bill) => acc + (bill.paid_amount || 0), 0);
-
-	const paidCount = bills.filter((b) => b.is_paid).length;
-	const unpaidCount = bills.length - paidCount;
-
-	const exactBills = bills.filter(
-		(b) => b.is_paid && (b.paid_amount || 0) === parseFloat(b.amount),
-	);
-	const underpaidBills = bills.filter(
-		(b) => b.is_paid && (b.paid_amount || 0) < parseFloat(b.amount),
-	);
-	const overpaidBills = bills.filter(
-		(b) => b.is_paid && (b.paid_amount || 0) > parseFloat(b.amount),
-	);
-
-	// Total shortfall across underpaid bills
-	const totalShortfall = underpaidBills.reduce(
-		(acc, b) => acc + (parseFloat(b.amount) - (b.paid_amount || 0)),
-		0,
-	);
-	// Total excess across overpaid bills
-	const totalExcess = overpaidBills.reduce(
-		(acc, b) => acc + ((b.paid_amount || 0) - parseFloat(b.amount)),
-		0,
-	);
+export default function Home({
+	userName,
+	summary,
+	loading,
+	t,
+}: DashboardProps) {
+	if (loading || !summary) return <HomeSkeleton />;
 
 	return (
 		<div className="space-y-6">
@@ -63,17 +32,17 @@ export default function Home({ userName, bills, t }: DashboardProps) {
 			</p>
 
 			<SummaryCard
-				totalCommitment={totalCommitment}
-				totalPaid={totalPaid}
-				totalUnpaid={totalUnpaid}
-				trueTotalPaid={trueTotalPaid}
+				totalCommitment={summary.total_commitment}
+				totalPaid={summary.total_paid}
+				totalUnpaid={summary.total_unpaid}
+				trueTotalPaid={summary.true_total_paid}
 				t={t}
 			/>
 
 			<div className="grid grid-cols-3 gap-3">
-				<StatCard label={t("total_bill")} value={bills.length} />
-				<StatCard label={t("total_paid")} value={paidCount} />
-				<StatCard label={t("total_unpaid")} value={unpaidCount} />
+				<StatCard label={t("total_bill")} value={summary.total_bills} />
+				<StatCard label={t("total_paid")} value={summary.paid_count} />
+				<StatCard label={t("total_unpaid")} value={summary.unpaid_count} />
 			</div>
 
 			<div className="bg-white rounded-xl border border-zinc-100 divide-y divide-zinc-50">
@@ -90,7 +59,7 @@ export default function Home({ userName, bills, t }: DashboardProps) {
 							{t("paid_exact")}
 						</p>
 						<p className="text-xs text-zinc-400">
-							{exactBills.length} {t("bills")}
+							{summary.exact_count} {t("bills")}
 						</p>
 					</div>
 					<span className="text-sm font-semibold text-emerald-600">✓</span>
@@ -105,11 +74,11 @@ export default function Home({ userName, bills, t }: DashboardProps) {
 							{t("underpaid_bills") ?? "Paid less than amount"}
 						</p>
 						<p className="text-xs text-zinc-400">
-							{underpaidBills.length} {t("bills")}
+							{summary.underpaid_count} {t("bills")}
 						</p>
 					</div>
 					<span className="text-sm font-semibold text-blue-600">
-						-RM {totalShortfall.toFixed(2)}
+						-RM {summary.total_shortfall.toFixed(2)}
 					</span>
 				</div>
 
@@ -122,11 +91,11 @@ export default function Home({ userName, bills, t }: DashboardProps) {
 							{t("overpaid_bills") ?? "Paid over amount"}
 						</p>
 						<p className="text-xs text-zinc-400">
-							{overpaidBills.length} {t("bills")}
+							{summary.overpaid_count} {t("bills")}
 						</p>
 					</div>
 					<span className="text-sm font-semibold text-amber-600">
-						+RM {totalExcess.toFixed(2)}
+						+RM {summary.total_excess.toFixed(2)}
 					</span>
 				</div>
 
@@ -139,11 +108,11 @@ export default function Home({ userName, bills, t }: DashboardProps) {
 							{t("not_paid_yet")}
 						</p>
 						<p className="text-xs text-zinc-400">
-							{unpaidCount} {t("bills")}
+							{summary.unpaid_count} {t("bills")}
 						</p>
 					</div>
 					<span className="text-sm font-semibold text-red-500">
-						{unpaidCount}
+						{summary.unpaid_count}
 					</span>
 				</div>
 			</div>

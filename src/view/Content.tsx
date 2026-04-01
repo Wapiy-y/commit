@@ -1,5 +1,5 @@
 import type { i18n, TFunction } from "i18next";
-import type { Bill, NewBill, User } from "@/type";
+import type { Bill, BillSummary, NewBill, User } from "@/type";
 import { ActiveTab } from "@/type";
 import Bills from "./Bills";
 import HomePage from "./Home";
@@ -10,6 +10,7 @@ interface ContentProps {
 	setActiveTab: (tab: ActiveTab) => void;
 	user: User | null;
 	bills: Bill[];
+	summary: BillSummary | null;
 	loading: boolean;
 	error: string | null;
 	isCurrentMonth: boolean;
@@ -27,6 +28,7 @@ export const Content = ({
 	setActiveTab,
 	user,
 	bills,
+	summary,
 	loading,
 	error,
 	isCurrentMonth,
@@ -43,7 +45,8 @@ export const Content = ({
 			{activeTab === ActiveTab.HOME && (
 				<HomePage
 					userName={user?.name.split(" ")[0] ?? ""}
-					bills={bills}
+					summary={summary}
+					loading={loading}
 					t={t}
 				/>
 			)}
