@@ -1,39 +1,97 @@
 import type { TFunction } from "i18next";
-import type React from "react";
-import { useState } from "react";
-import { login, register } from "@/api/auth";
-import { useToast } from "@/components/Toast";
-import type { User } from "@/type";
+import { type FormEvent, useEffect, useState } from "react";
+import { authClient, requestPasswordReset, resetPassword } from "@/api/auth";
+import { useToast } from "@/hooks/useToast";
+
+type AuthView = "login" | "signup" | "forgot" | "reset";
 
 interface LoginProps {
-	onLogin: (token: string, user: User) => void;
 	t: TFunction;
 }
 
-export default function Login({ onLogin, t }: LoginProps) {
-	const [isLogin, setIsLogin] = useState(true);
-	const [authEmail, setAuthEmail] = useState("");
-	const [authPassword, setAuthPassword] = useState("");
-	const [authName, setAuthName] = useState("");
-	const [authLoading, setAuthLoading] = useState(false);
+const INPUT_CLASS =
+	"w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900";
+
+const SUBMIT_CLASS =
+	"w-full py-2.5 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 disabled:opacity-50 transition-colors";
+
+export default function Login({ t }: LoginProps) {
+	const [view, setView] = useState<AuthView>("login");
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [newPassword, setNewPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [name, setName] = useState("");
+	const [resetToken, setResetToken] = useState("");
+	const [loading, setLoading] = useState(false);
 	const toast = useToast();
 
-	const handleAuth = async (e: React.SubmitEvent) => {
-		e.preventDefault();
-		setAuthLoading(true);
-		try {
-			const data = isLogin
-				? await login(authEmail, authPassword)
-				: await register(authEmail, authPassword, authName);
+	// Detect reset token in URL — switch to reset view automatically
+	useEffect(() => {
+		const token = new URLSearchParams(window.location.search).get("token");
+		if (token) {
+			setResetToken(token);
+			setView("reset");
+		}
+	}, []);
 
-			localStorage.setItem("token", data.token);
-			onLogin(data.token, data.user);
-		} catch (err: unknown) {
-			toast.error(
-				err instanceof Error ? err.message : t("failed_authenticate"),
-			);
+	const handleLoginOrSignup = async (e: FormEvent) => {
+		e.preventDefault();
+		setLoading(true);
+		try {
+			const result =
+				view === "login"
+					? await authClient.signIn.email({ email, password })
+					: await authClient.signUp.email({ email, password, name });
+
+			if (result.error) {
+				toast.error(result.error.message ?? t("failed_authenticate"));
+			}
+		} catch {
+			toast.error(t("failed_authenticate"));
 		} finally {
-			setAuthLoading(false);
+			setLoading(false);
+		}
+	};
+
+	const handleForgotPassword = async (e: FormEvent) => {
+		e.preventDefault();
+		setLoading(true);
+		try {
+			const result = await requestPasswordReset(email, window.location.origin);
+			if (result?.error) {
+				toast.error(result.error.message ?? t("failed_authenticate"));
+			} else {
+				toast.success(t("reset_email_sent"));
+				setView("login");
+			}
+		} catch {
+			toast.error(t("failed_authenticate"));
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleResetPassword = async (e: FormEvent) => {
+		e.preventDefault();
+		if (newPassword !== confirmPassword) {
+			toast.error(t("password_mismatch"));
+			return;
+		}
+		setLoading(true);
+		try {
+			const result = await resetPassword(newPassword, resetToken);
+			if (result?.error) {
+				toast.error(result.error.message ?? t("failed_authenticate"));
+			} else {
+				toast.success(t("password_reset_success"));
+				window.history.replaceState({}, "", window.location.pathname);
+				setView("login");
+			}
+		} catch {
+			toast.error(t("failed_authenticate"));
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -45,74 +103,153 @@ export default function Login({ onLogin, t }: LoginProps) {
 					<p className="text-zinc-500 text-sm">{t("login_description")}</p>
 				</div>
 
-				<form onSubmit={handleAuth} className="space-y-4">
-					{!isLogin && (
+				{/* ── Login / Signup ── */}
+				{(view === "login" || view === "signup") && (
+					<form onSubmit={handleLoginOrSignup} className="space-y-4">
+						{view === "signup" && (
+							<div>
+								<label className="block text-xs font-medium text-zinc-500 mb-1">
+									{t("login_name")}
+								</label>
+								<input
+									type="text"
+									required
+									value={name}
+									onChange={(e) => setName(e.target.value)}
+									className={INPUT_CLASS}
+									placeholder="John Doe"
+								/>
+							</div>
+						)}
 						<div>
 							<label className="block text-xs font-medium text-zinc-500 mb-1">
-								{t("login_name")}
+								{t("login_email")}
 							</label>
 							<input
-								type="text"
+								type="email"
 								required
-								value={authName}
-								onChange={(e) => setAuthName(e.target.value)}
-								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-								placeholder="John Doe"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								className={INPUT_CLASS}
+								placeholder="you@example.com"
 							/>
 						</div>
-					)}
-					<div>
-						<label className="block text-xs font-medium text-zinc-500 mb-1">
-							{t("login_email")}
-						</label>
-						<input
-							type="email"
-							required
-							value={authEmail}
-							onChange={(e) => setAuthEmail(e.target.value)}
-							className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-							placeholder="you@example.com"
-						/>
+						<div>
+							<label className="block text-xs font-medium text-zinc-500 mb-1">
+								{t("login_password")}
+							</label>
+							<input
+								type="password"
+								required
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								className={INPUT_CLASS}
+								placeholder="••••••••"
+							/>
+						</div>
+
+						<button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+							{loading
+								? t("loading")
+								: view === "login"
+									? t("sign_in")
+									: t("created_account")}
+						</button>
+
+						{view === "login" && (
+							<button
+								type="button"
+								onClick={() => setView("forgot")}
+								className="w-full text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
+							>
+								{t("forgot_password")}
+							</button>
+						)}
+					</form>
+				)}
+
+				{/* ── Forgot Password ── */}
+				{view === "forgot" && (
+					<form onSubmit={handleForgotPassword} className="space-y-4">
+						<p className="text-sm text-zinc-500 text-center">
+							{t("forgot_password_description")}
+						</p>
+						<div>
+							<label className="block text-xs font-medium text-zinc-500 mb-1">
+								{t("login_email")}
+							</label>
+							<input
+								type="email"
+								required
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								className={INPUT_CLASS}
+								placeholder="you@example.com"
+							/>
+						</div>
+						<button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+							{loading ? t("loading") : t("send_reset_email")}
+						</button>
+						<button
+							type="button"
+							onClick={() => setView("login")}
+							className="w-full text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
+						>
+							{t("back_to_login")}
+						</button>
+					</form>
+				)}
+
+				{/* ── Reset Password ── */}
+				{view === "reset" && (
+					<form onSubmit={handleResetPassword} className="space-y-4">
+						<p className="text-sm text-zinc-500 text-center">
+							{t("reset_password_description")}
+						</p>
+						<div>
+							<label className="block text-xs font-medium text-zinc-500 mb-1">
+								{t("new_password")}
+							</label>
+							<input
+								type="password"
+								required
+								value={newPassword}
+								onChange={(e) => setNewPassword(e.target.value)}
+								className={INPUT_CLASS}
+								placeholder="••••••••"
+							/>
+						</div>
+						<div>
+							<label className="block text-xs font-medium text-zinc-500 mb-1">
+								{t("confirm_password")}
+							</label>
+							<input
+								type="password"
+								required
+								value={confirmPassword}
+								onChange={(e) => setConfirmPassword(e.target.value)}
+								className={INPUT_CLASS}
+								placeholder="••••••••"
+							/>
+						</div>
+						<button type="submit" disabled={loading} className={SUBMIT_CLASS}>
+							{loading ? t("loading") : t("reset_password")}
+						</button>
+					</form>
+				)}
+
+				{/* ── Toggle login / signup ── */}
+				{(view === "login" || view === "signup") && (
+					<div className="mt-6 text-center">
+						<button
+							onClick={() => setView(view === "login" ? "signup" : "login")}
+							className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
+						>
+							{view === "login" ? t("signup_info") : t("login_info")}
+						</button>
 					</div>
-					<div>
-						<label className="block text-xs font-medium text-zinc-500 mb-1">
-							{t("login_password")}
-						</label>
-						<input
-							type="password"
-							required
-							value={authPassword}
-							onChange={(e) => setAuthPassword(e.target.value)}
-							className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900"
-							placeholder="••••••••"
-						/>
-					</div>
+				)}
 
-					<button
-						type="submit"
-						disabled={authLoading}
-						className="w-full py-2.5 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 disabled:opacity-50 transition-colors"
-					>
-						{authLoading
-							? t("loading")
-							: isLogin
-								? t("sign_in")
-								: t("created_account")}
-					</button>
-				</form>
-
-				<div className="mt-6 text-center">
-					<button
-						onClick={() => {
-							setIsLogin(!isLogin);
-						}}
-						className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
-					>
-						{isLogin ? t("signup_info") : t("login_info")}
-					</button>
-				</div>
-
-				{/* Privacy concern link */}
 				<div className="mt-4 text-center">
 					<a
 						href="privacy.html"
