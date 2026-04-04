@@ -1,13 +1,18 @@
-import type { User } from "@/type";
+import { createInternalNeonAuth } from "@neondatabase/neon-js/auth";
+import { BetterAuthReactAdapter } from "@neondatabase/neon-js/auth/react";
 
-export const getToken = () => localStorage.getItem("token");
+const neonAuth = createInternalNeonAuth(
+	import.meta.env.VITE_NEON_AUTH_URL as string,
+	{ adapter: BetterAuthReactAdapter() },
+);
 
-export const authHeaders = () => ({
-	"Content-Type": "application/json",
-	Authorization: `Bearer ${getToken()}`,
-});
+// authClient exposes React hooks (useSession) + signIn/signUp/signOut
+export const authClient = neonAuth.adapter;
 
-// Thrown only when token is genuinely invalid/expired (HTTP 401)
+// getAuthToken uses the built-in getJWTToken helper
+export const getAuthToken = () => neonAuth.getJWTToken();
+
+// Thrown when the API rejects the token (HTTP 401)
 export class UnauthorizedError extends Error {
 	constructor() {
 		super("Unauthorized");
@@ -15,7 +20,7 @@ export class UnauthorizedError extends Error {
 	}
 }
 
-// Thrown when the server is unreachable (no internet, timeout, etc.)
+// Thrown when the server is unreachable
 export class NetworkError extends Error {
 	constructor() {
 		super("Network unavailable");
@@ -23,45 +28,29 @@ export class NetworkError extends Error {
 	}
 }
 
-export const fetchMe = async (): Promise<User> => {
-	try {
-		const res = await fetch("/api/auth/me", { headers: authHeaders() });
-		if (res.status === 401) throw new UnauthorizedError();
-		if (!res.ok) throw new NetworkError(); // 5xx, etc — treat as offline
-		const data = await res.json();
-		return data.user;
-	} catch (err) {
-		if (err instanceof UnauthorizedError) throw err;
-		// fetch() itself throws TypeError on network failure
-		throw new NetworkError();
-	}
+interface AuthResult {
+	error: { message?: string } | null;
+}
+
+type PasswordResetClient = {
+	requestPasswordReset(params: {
+		email: string;
+		redirectTo: string;
+	}): Promise<AuthResult>;
+	resetPassword(params: {
+		newPassword: string;
+		token: string;
+	}): Promise<AuthResult>;
 };
 
-export const login = async (
-	email: string,
-	password: string,
-): Promise<{ token: string; user: User }> => {
-	const res = await fetch("/api/auth/login", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ email, password }),
+export const requestPasswordReset = (email: string, redirectTo: string) =>
+	(authClient as unknown as PasswordResetClient).requestPasswordReset({
+		email,
+		redirectTo,
 	});
-	const data = await res.json();
-	if (!res.ok) throw new Error(data.error || "Login failed");
-	return data;
-};
 
-export const register = async (
-	email: string,
-	password: string,
-	name: string,
-): Promise<{ token: string; user: User }> => {
-	const res = await fetch("/api/auth/register", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ email, password, name }),
+export const resetPassword = (newPassword: string, token: string) =>
+	(authClient as unknown as PasswordResetClient).resetPassword({
+		newPassword,
+		token,
 	});
-	const data = await res.json();
-	if (!res.ok) throw new Error(data.error || "Registration failed");
-	return data;
-};

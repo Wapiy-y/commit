@@ -100,6 +100,18 @@ const resources = {
 			created_account: "Create Account",
 			login_info: "Already have an account? Sign in",
 			signup_info: "Don't have an account? Sign up",
+			forgot_password: "Forgot password?",
+			forgot_password_description:
+				"Enter your email and we'll send you a reset link.",
+			send_reset_email: "Send reset email",
+			back_to_login: "Back to login",
+			reset_email_sent: "Check your email for a reset link.",
+			reset_password_description: "Enter your new password below.",
+			new_password: "New password",
+			confirm_password: "Confirm password",
+			reset_password: "Reset password",
+			password_mismatch: "Passwords do not match.",
+			password_reset_success: "Password updated. Please log in.",
 
 			//MENU
 			menu_title: "Menu",
@@ -219,6 +231,18 @@ const resources = {
 			created_account: "Cipta Akaun",
 			login_info: "Sudah mempunyai akaun? Log masuk",
 			signup_info: "Tiada akaun? Daftar",
+			forgot_password: "Lupa kata laluan?",
+			forgot_password_description:
+				"Masukkan emel anda dan kami akan hantar pautan set semula.",
+			send_reset_email: "Hantar emel set semula",
+			back_to_login: "Kembali ke log masuk",
+			reset_email_sent: "Semak emel anda untuk pautan set semula.",
+			reset_password_description: "Masukkan kata laluan baharu anda di bawah.",
+			new_password: "Kata laluan baharu",
+			confirm_password: "Sahkan kata laluan",
+			reset_password: "Set semula kata laluan",
+			password_mismatch: "Kata laluan tidak sepadan.",
+			password_reset_success: "Kata laluan dikemas kini. Sila log masuk.",
 
 			//MENU
 			menu_title: "Menu",

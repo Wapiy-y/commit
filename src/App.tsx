@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { Home, Menu, Receipt } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchMe, UnauthorizedError } from "./api/auth";
+import { authClient, UnauthorizedError } from "./api/auth";
 import {
 	addBill,
 	deleteBill,
@@ -12,24 +12,20 @@ import {
 } from "./api/bills";
 import { Header } from "./components/Header";
 import { NavButton } from "./components/NavButton";
-import { useToast } from "./components/Toast";
-import type { Bill, BillSummary, NewBill, User } from "./type";
+import { useAuthSession } from "./hooks/useAuthSession";
+import { useToast } from "./hooks/useToast";
+import type { Bill, BillSummary, NewBill } from "./type";
 import { ActiveTab } from "./type";
 import { Content } from "./view/Content";
 import Login from "./view/login";
 
 export default function App() {
 	const { t, i18n } = useTranslation();
-	const [token, setToken] = useState<string | null>(
-		localStorage.getItem("token"),
-	);
-	const [user, setUser] = useState<User | null>(() => {
-		const stored = localStorage.getItem("user");
-		return stored ? JSON.parse(stored) : null;
-	});
-	const [authChecking, setAuthChecking] = useState(
-		!!localStorage.getItem("token"),
-	);
+	const { data: sessionData, isPending: authChecking } = useAuthSession();
+
+	const user = sessionData?.user
+		? { email: sessionData.user.email, name: sessionData.user.name ?? "" }
+		: null;
 
 	const toast = useToast();
 
@@ -47,32 +43,11 @@ export default function App() {
 	const todayMonthYear = format(new Date(), "yyyy-MM");
 	const isCurrentMonth = currentMonthYear === todayMonthYear;
 
-	// Verify token on mount — silent refresh
-	useEffect(() => {
-		if (!token) return;
-		fetchMe()
-			.then((u) => {
-				localStorage.setItem("user", JSON.stringify(u));
-				setUser((prev) => {
-					if (JSON.stringify(prev) === JSON.stringify(u)) return prev;
-					return u;
-				});
-			})
-			.catch((err) => {
-				if (err instanceof UnauthorizedError) {
-					logout();
-				}
-			})
-			.finally(() => {
-				setAuthChecking(false);
-			});
-	}, [token]);
-
 	// Summary: load eagerly on mount and whenever month changes
 	useEffect(() => {
 		if (!user) return;
 		loadSummary();
-	}, [currentMonthYear, user]);
+	}, [currentMonthYear, user?.email]);
 
 	// Bills: load lazily — only when the user actually visits the bill tab
 	useEffect(() => {
@@ -83,26 +58,14 @@ export default function App() {
 		) {
 			loadBillsList();
 		}
-	}, [activeTab, currentMonthYear, user]);
+	}, [activeTab, currentMonthYear, user?.email]);
 
-	const handleLogin = (newToken: string, loggedInUser: User) => {
+	const logout = async () => {
 		billsMonthRef.current = null;
-		setToken(newToken);
-		setUser(loggedInUser);
-		localStorage.setItem("user", JSON.stringify(loggedInUser));
-	};
-
-	const logout = () => {
-		localStorage.removeItem("token");
-		localStorage.removeItem("user");
-		billsMonthRef.current = null;
-		setToken(null);
-		setUser(null);
 		setBills([]);
 		setSummary(null);
+		await authClient.signOut();
 	};
-
-	const handleAuthError = () => logout();
 
 	const loadSummary = async () => {
 		setLoading(true);
@@ -111,8 +74,8 @@ export default function App() {
 			const data = await fetchBillsSummary(currentMonthYear);
 			setSummary(data);
 		} catch (err) {
-			if (err instanceof Error && err.message === "UNAUTHORIZED") {
-				handleAuthError();
+			if (err instanceof UnauthorizedError) {
+				logout();
 			} else {
 				setError(t("failed_load_bill"));
 				toast.error(t("failed_load_bill"));
@@ -131,8 +94,8 @@ export default function App() {
 			billsMonthRef.current = currentMonthYear;
 			toast.success(t("bills_loaded"));
 		} catch (err) {
-			if (err instanceof Error && err.message === "UNAUTHORIZED") {
-				handleAuthError();
+			if (err instanceof UnauthorizedError) {
+				logout();
 			} else {
 				setError(t("failed_load_bill"));
 				toast.error(t("failed_load_bill"));
@@ -155,8 +118,8 @@ export default function App() {
 			setSummary(summaryData);
 			billsMonthRef.current = currentMonthYear;
 		} catch (err) {
-			if (err instanceof Error && err.message === "UNAUTHORIZED") {
-				handleAuthError();
+			if (err instanceof UnauthorizedError) {
+				logout();
 			} else {
 				setError(t("failed_load_bill"));
 				toast.error(t("failed_load_bill"));
@@ -168,7 +131,7 @@ export default function App() {
 
 	const handleAddBill = async (newBill: NewBill) => {
 		await addBill(newBill);
-		reloadAll();
+		await reloadAll();
 	};
 
 	const handleUpdatePayment = async (bill: Bill, amount: string) => {
@@ -198,7 +161,7 @@ export default function App() {
 	const handleDeleteBill = async (id: number) => {
 		if (!confirm(t("delete_bill_confirm"))) return;
 		await deleteBill(id);
-		reloadAll();
+		await reloadAll();
 	};
 
 	const toggleLanguage = () => {
@@ -220,8 +183,8 @@ export default function App() {
 		);
 	}
 
-	if (!token) {
-		return <Login onLogin={handleLogin} t={t} />;
+	if (!user) {
+		return <Login t={t} />;
 	}
 
 	return (

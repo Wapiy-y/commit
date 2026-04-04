@@ -10,19 +10,14 @@ import { StatCard } from "@/components/StatCard";
 import { SummaryCard } from "@/components/SummerCard";
 import type { BillSummary } from "@/type";
 
-interface DashboardProps {
+interface HomeProps {
 	userName: string;
 	summary: BillSummary | null;
 	loading: boolean;
 	t: TFunction;
 }
 
-export default function Home({
-	userName,
-	summary,
-	loading,
-	t,
-}: DashboardProps) {
+export default function Home({ userName, summary, loading, t }: HomeProps) {
 	if (loading || !summary) return <HomeSkeleton />;
 
 	return (
@@ -71,7 +66,7 @@ export default function Home({
 					</div>
 					<div className="flex-1">
 						<p className="text-sm font-medium text-zinc-800">
-							{t("underpaid_bills") ?? "Paid less than amount"}
+							{t("underpaid_bills")}
 						</p>
 						<p className="text-xs text-zinc-400">
 							{summary.underpaid_count} {t("bills")}
@@ -88,7 +83,7 @@ export default function Home({
 					</div>
 					<div className="flex-1">
 						<p className="text-sm font-medium text-zinc-800">
-							{t("overpaid_bills") ?? "Paid over amount"}
+							{t("overpaid_bills")}
 						</p>
 						<p className="text-xs text-zinc-400">
 							{summary.overpaid_count} {t("bills")}

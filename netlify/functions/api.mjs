@@ -1,29 +1,19 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
-import bcrypt from "bcryptjs";
 import express from "express";
-import jwt from "jsonwebtoken";
+import * as jose from "jose";
 import serverless from "serverless-http";
 
 const app = express();
 app.use(express.json());
 
-// DEBUG: log every request path
-app.use((req, _res, next) => {
-	console.log(">>> incoming url:", req.url, "| method:", req.method);
-	next();
-});
-
 // Strip the Netlify function prefix so Express sees clean paths
 app.use((req, _res, next) => {
-	const original = req.url;
 	req.url = req.url.replace(/^\/api/, "") || "/";
-	console.log(">>> rewritten url:", original, "->", req.url);
 	next();
 });
 
 const sql = neon(process.env.DATABASE_URL);
-const JWT_SECRET = process.env.JWT_SECRET;
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY; // 64-char hex (32 bytes)
 const ALGORITHM = "aes-256-gcm";
 
@@ -32,6 +22,17 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 64) {
 		"ENCRYPTION_KEY must be a 64-char hex string. Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
 	);
 }
+
+if (!process.env.NEON_AUTH_URL) {
+	throw new Error("NEON_AUTH_URL environment variable is required");
+}
+
+// ── Neon Auth JWKS setup ──────────────────────────────────────────────────────
+
+const JWKS = jose.createRemoteJWKSet(
+	new URL(`${process.env.NEON_AUTH_URL}/.well-known/jwks.json`),
+);
+const AUTH_ISSUER = new URL(process.env.NEON_AUTH_URL).origin;
 
 // ── Encryption helpers ────────────────────────────────────────────────────────
 
@@ -81,89 +82,25 @@ function decryptBill(bill) {
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
 	const authHeader = req.headers.authorization;
 	if (!authHeader?.startsWith("Bearer ")) {
 		return res.status(401).json({ error: "Missing token" });
 	}
 	const token = authHeader.split(" ")[1];
 	try {
-		const payload = jwt.verify(token, JWT_SECRET);
-		req.userId = payload.userId;
+		const { payload } = await jose.jwtVerify(token, JWKS, {
+			issuer: AUTH_ISSUER,
+		});
+		if (!payload.sub) {
+			return res.status(401).json({ error: "Invalid token" });
+		}
+		req.userId = payload.sub; // UUID string from neon_auth.user.id
 		next();
 	} catch {
 		return res.status(401).json({ error: "Invalid or expired token" });
 	}
 }
-
-// ── Auth routes ───────────────────────────────────────────────────────────────
-
-app.post("/auth/register", async (req, res) => {
-	const { email, password, name } = req.body;
-	if (!email || !password || !name) {
-		return res
-			.status(400)
-			.json({ error: "Email, password, and name are required" });
-	}
-	if (password.length < 8) {
-		return res
-			.status(400)
-			.json({ error: "Password must be at least 8 characters" });
-	}
-	try {
-		const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
-		if (existing.length > 0) {
-			return res.status(409).json({ error: "Email already registered" });
-		}
-		const passwordHash = await bcrypt.hash(password, 12);
-		const [user] = await sql`
-      INSERT INTO users (email, name, password_hash)
-      VALUES (${email}, ${name}, ${passwordHash})
-      RETURNING email, name
-    `;
-		const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-		res.status(201).json({ token, user });
-	} catch (err) {
-		console.error("register error:", err);
-		res.status(500).json({ error: "Registration failed" });
-	}
-});
-
-app.post("/auth/login", async (req, res) => {
-	const { email, password } = req.body;
-	if (!email || !password) {
-		return res.status(400).json({ error: "Email and password are required" });
-	}
-	try {
-		const [user] = await sql`SELECT * FROM users WHERE email = ${email}`;
-		if (!user)
-			return res.status(401).json({ error: "Invalid email or password" });
-
-		const valid = await bcrypt.compare(password, user.password_hash);
-		if (!valid)
-			return res.status(401).json({ error: "Invalid email or password" });
-
-		const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-		res.json({
-			token,
-			user: { email: user.email, name: user.name },
-		});
-	} catch (err) {
-		console.error("login error:", err);
-		res.status(500).json({ error: "Login failed" });
-	}
-});
-
-app.get("/auth/me", requireAuth, async (req, res) => {
-	try {
-		const [user] =
-			await sql`SELECT email, name FROM users WHERE id = ${req.userId}`;
-		if (!user) return res.status(404).json({ error: "User not found" });
-		res.json({ user });
-	} catch {
-		res.status(500).json({ error: "Failed to fetch user" });
-	}
-});
 
 // ── Bills routes ──────────────────────────────────────────────────────────────
 
@@ -201,7 +138,6 @@ app.get("/bills", requireAuth, async (req, res) => {
       ORDER BY b.due_day ASC
     `;
 
-		// Decrypt name and notes before sending to client
 		res.json(bills.map(decryptBill));
 	} catch (err) {
 		console.error("fetch bills error:", err);
@@ -296,7 +232,6 @@ app.post("/bills", requireAuth, async (req, res) => {
       RETURNING id, name, amount::text, due_day, start_date, duration_months, notes, category
     `;
 
-		// Decrypt before returning to client
 		res.status(201).json(decryptBill(bill));
 	} catch (err) {
 		console.error("add bill error:", err);
