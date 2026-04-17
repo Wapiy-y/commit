@@ -115,6 +115,14 @@ const resources = {
 
 			//MENU
 			menu_title: "Menu",
+			feedback: "Feedback",
+			feedback_type_feedback: "Feedback",
+			feedback_type_bug: "Bug Report",
+			feedback_placeholder: "Share your thoughts...",
+			feedback_placeholder_bug: "Describe the bug and steps to reproduce...",
+			feedback_attach: "Attach a file (optional)",
+			feedback_send: "Send",
+			feedback_thanks: "Thank you for your feedback!",
 
 			//ANALYTIC
 			analytics_title: "Analytic",
@@ -246,6 +254,15 @@ const resources = {
 
 			//MENU
 			menu_title: "Menu",
+			feedback: "Maklum Balas",
+			feedback_type_feedback: "Maklum Balas",
+			feedback_type_bug: "Laporan Bug",
+			feedback_placeholder: "Kongsikan pendapat anda...",
+			feedback_placeholder_bug:
+				"Huraikan bug dan langkah untuk mengulanginya...",
+			feedback_attach: "Lampirkan fail (pilihan)",
+			feedback_send: "Hantar",
+			feedback_thanks: "Terima kasih atas maklum balas anda!",
 
 			//ANALYTIC
 			analytics_title: "Analitik",

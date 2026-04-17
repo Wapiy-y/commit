@@ -1,5 +1,13 @@
 import type { i18n, TFunction } from "i18next";
-import { ChevronRight, Globe, LogOut, PieChart } from "lucide-react";
+import {
+	ChevronRight,
+	Globe,
+	LogOut,
+	MessageSquare,
+	PieChart,
+} from "lucide-react";
+import { useState } from "react";
+import FeedbackForm from "@/components/FeedbackForm";
 import { ActiveTab, type User } from "@/type";
 
 interface MenuProps {
@@ -19,6 +27,8 @@ export default function Menu({
 	t,
 	i18n,
 }: MenuProps) {
+	const [showFeedback, setShowFeedback] = useState(false);
+
 	return (
 		<div className="space-y-4 animate-in fade-in duration-300">
 			{/* Menu page */}
@@ -54,6 +64,30 @@ export default function Menu({
 				</div>
 				<ChevronRight size={20} className="text-zinc-300" />
 			</button>
+
+			{/* feedback */}
+			<div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+				<button
+					onClick={() => setShowFeedback((prev) => !prev)}
+					className="w-full flex items-center gap-4 p-4 hover:bg-zinc-50 transition-colors"
+				>
+					<div className="p-2 bg-violet-50 text-violet-600 rounded-lg">
+						<MessageSquare size={24} />
+					</div>
+					<div className="flex-1 text-left">
+						<h3 className="font-medium text-zinc-900">{t("feedback")}</h3>
+					</div>
+					<ChevronRight
+						size={20}
+						className={`text-zinc-300 transition-transform ${showFeedback ? "rotate-90" : ""}`}
+					/>
+				</button>
+				{showFeedback && (
+					<div className="px-4 pb-4">
+						<FeedbackForm t={t} email={user?.email} />
+					</div>
+				)}
+			</div>
 
 			{/* log out */}
 			<button
