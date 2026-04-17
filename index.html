@@ -14,5 +14,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Hidden form for Netlify Forms bot detection -->
+    <form name="feedback" data-netlify="true" enctype="multipart/form-data" hidden>
+      <input type="hidden" name="form-name" value="feedback" />
+      <input type="hidden" name="type" />
+      <input type="hidden" name="email" />
+      <textarea name="message"></textarea>
+      <input type="file" name="attachment" />
+    </form>
   </body>
 </html>
