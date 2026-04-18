@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import {
 	AlertCircle,
 	CheckCircle2,
+	Sparkles,
 	TrendingDown,
 	TrendingUp,
 } from "lucide-react";
@@ -14,17 +15,80 @@ interface HomeProps {
 	userName: string;
 	summary: BillSummary | null;
 	loading: boolean;
+	aiInsight: string | null;
+	aiLoading: boolean;
+	onAiInsight: () => void;
 	t: TFunction;
 }
 
-export default function Home({ userName, summary, loading, t }: HomeProps) {
+export default function Home({
+	userName,
+	summary,
+	loading,
+	aiInsight,
+	aiLoading,
+	onAiInsight,
+	t,
+}: HomeProps) {
 	if (loading || !summary) return <HomeSkeleton />;
 
 	return (
 		<div className="space-y-6">
-			<p className="text-sm text-zinc-500">
-				{t("user_title")}, {userName} 👋
-			</p>
+			<div className="flex items-center justify-between">
+				<p className="text-sm text-zinc-500">
+					{t("user_title")}, {userName} 👋
+				</p>
+				<button
+					type="button"
+					onClick={onAiInsight}
+					disabled={aiLoading}
+					style={
+						aiLoading
+							? {
+									backgroundImage:
+										"linear-gradient(270deg, #10b981, #34d399, #059669, #6ee7b7)",
+									backgroundSize: "300% 300%",
+									animation: "gradient-shift 2s ease infinite",
+								}
+							: {
+									backgroundImage:
+										"linear-gradient(to right, #059669, #34d399)",
+								}
+					}
+					className="flex items-center gap-1.5 px-3 py-1.5 text-white text-xs font-medium rounded-full active:scale-95 transition-transform"
+				>
+					<Sparkles size={12} />
+					{aiLoading ? t("ai_loading") : t("ai_insight")}
+				</button>
+			</div>
+
+			{aiInsight && (
+				<div
+					className="rounded-xl p-4 space-y-3 border border-emerald-800/40"
+					style={{
+						background:
+							"linear-gradient(135deg, #0f1a15 0%, #111827 60%, #0a1628 100%)",
+					}}
+				>
+					<div className="flex items-center gap-1.5">
+						<Sparkles size={12} className="text-emerald-400" />
+						<p className="text-xs font-semibold text-emerald-400 tracking-widest uppercase">
+							{t("ai_insight")}
+						</p>
+					</div>
+					{aiInsight
+						.split("\n\n")
+						.filter(Boolean)
+						.map((paragraph) => (
+							<p
+								key={paragraph}
+								className="text-sm text-zinc-200 leading-relaxed"
+							>
+								{paragraph}
+							</p>
+						))}
+				</div>
+			)}
 
 			<SummaryCard
 				totalCommitment={summary.total_commitment}

@@ -124,6 +124,13 @@ const resources = {
 			feedback_send: "Send",
 			feedback_thanks: "Thank you for your feedback!",
 
+			//AI
+			ai_insight: "Biko AI",
+			ai_click_tip: "Click for tips",
+			ai_loading: "Generating",
+			ai_insight_error: "Failed to generate insight",
+			ai_limit_reached: "Daily limit reached (5/5). Try again tomorrow.",
+
 			//ANALYTIC
 			analytics_title: "Analytic",
 			language: "Language",
@@ -263,6 +270,13 @@ const resources = {
 			feedback_attach: "Lampirkan fail (pilihan)",
 			feedback_send: "Hantar",
 			feedback_thanks: "Terima kasih atas maklum balas anda!",
+
+			//AI
+			ai_insight: "Biko AI",
+			ai_click_tip: "Klik untuk tips",
+			ai_loading: "Menjana",
+			ai_insight_error: "Gagal menjana pandangan",
+			ai_limit_reached: "Had harian dicapai (5/5). Cuba lagi esok.",
 
 			//ANALYTIC
 			analytics_title: "Analitik",

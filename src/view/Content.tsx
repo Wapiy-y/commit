@@ -17,6 +17,9 @@ interface ContentProps {
 	onAddBill: (bill: NewBill) => Promise<void>;
 	onDeleteBill: (id: number) => Promise<void>;
 	onUpdatePayment: (bill: Bill, amount: string) => Promise<void>;
+	aiInsight: string | null;
+	aiLoading: boolean;
+	onAiInsight: () => void;
 	t: TFunction;
 	logout: () => void;
 	toggleLanguage: () => void;
@@ -35,6 +38,9 @@ export const Content = ({
 	onAddBill,
 	onDeleteBill,
 	onUpdatePayment,
+	aiInsight,
+	aiLoading,
+	onAiInsight,
 	t,
 	logout,
 	toggleLanguage,
@@ -47,6 +53,9 @@ export const Content = ({
 					userName={user?.name.split(" ")[0] ?? ""}
 					summary={summary}
 					loading={loading}
+					aiInsight={aiInsight}
+					aiLoading={aiLoading}
+					onAiInsight={onAiInsight}
 					t={t}
 				/>
 			)}
