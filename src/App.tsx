@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Home, Menu, Receipt } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { fetchMonthlyInsight } from "./api/ai";
 import { authClient, UnauthorizedError } from "./api/auth";
 import {
 	addBill,
@@ -35,6 +36,8 @@ export default function App() {
 	const [summary, setSummary] = useState<BillSummary | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [aiInsight, setAiInsight] = useState<string | null>(null);
+	const [aiLoading, setAiLoading] = useState(false);
 
 	// Tracks which month's bills are currently loaded — null means not yet loaded
 	const billsMonthRef = useRef<string | null>(null);
@@ -46,6 +49,7 @@ export default function App() {
 	// Summary: load eagerly on mount and whenever month changes
 	useEffect(() => {
 		if (!user) return;
+		setAiInsight(null);
 		loadSummary();
 	}, [currentMonthYear, user?.email]);
 
@@ -164,6 +168,51 @@ export default function App() {
 		await reloadAll();
 	};
 
+	const handleAiInsight = async () => {
+		if (!summary) return;
+
+		const USAGE_KEY = "biko_ai_usage";
+		const today = format(new Date(), "yyyy-MM-dd");
+		const stored = localStorage.getItem(USAGE_KEY);
+		const usage = stored ? JSON.parse(stored) : { count: 0, date: "" };
+		const todayCount = usage.date === today ? usage.count : 0;
+
+		if (todayCount >= 5) {
+			toast.error(t("ai_limit_reached"));
+			return;
+		}
+
+		setAiLoading(true);
+		setAiInsight(null);
+		try {
+			const previousMonthYear = format(
+				new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),
+				"yyyy-MM",
+			);
+			const previousSummary = await fetchBillsSummary(previousMonthYear);
+			const insight = await fetchMonthlyInsight(
+				summary,
+				previousSummary,
+				currentMonthYear,
+				previousMonthYear,
+				i18n.language,
+			);
+			localStorage.setItem(
+				USAGE_KEY,
+				JSON.stringify({ count: todayCount + 1, date: today }),
+			);
+			setAiInsight(insight);
+		} catch (err) {
+			if (err instanceof UnauthorizedError) {
+				logout();
+			} else {
+				toast.error(t("ai_insight_error"));
+			}
+		} finally {
+			setAiLoading(false);
+		}
+	};
+
 	const toggleLanguage = () => {
 		const newLang = i18n.language === "en" ? "my" : "en";
 		i18n.changeLanguage(newLang);
@@ -207,6 +256,9 @@ export default function App() {
 				onAddBill={handleAddBill}
 				onDeleteBill={handleDeleteBill}
 				onUpdatePayment={handleUpdatePayment}
+				aiInsight={aiInsight}
+				aiLoading={aiLoading}
+				onAiInsight={handleAiInsight}
 				t={t}
 				i18n={i18n}
 				toggleLanguage={toggleLanguage}
