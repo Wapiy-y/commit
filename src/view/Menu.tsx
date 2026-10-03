@@ -1,13 +1,5 @@
 import type { i18n, TFunction } from "i18next";
-import {
-	ChevronRight,
-	Globe,
-	LogOut,
-	MessageSquare,
-	PieChart,
-} from "lucide-react";
-import { useState } from "react";
-import FeedbackForm from "@/components/FeedbackForm";
+import { ChevronRight, Globe, LogOut, PieChart } from "lucide-react";
 import { ActiveTab, type User } from "@/type";
 
 interface MenuProps {
@@ -27,8 +19,6 @@ export default function Menu({
 	t,
 	i18n,
 }: MenuProps) {
-	const [showFeedback, setShowFeedback] = useState(false);
-
 	return (
 		<div className="space-y-4 animate-in fade-in duration-300">
 			{/* Menu page */}
@@ -65,7 +55,17 @@ export default function Menu({
 				<ChevronRight size={20} className="text-zinc-300" />
 			</button>
 
-			{/* feedback */}
+			{/*
+			 * Feedback is disabled.
+			 *
+			 * FeedbackForm posts to "/" with data-netlify="true", which is a
+			 * Netlify Forms endpoint. On the Cloudflare Worker that POST reaches
+			 * the Worker and does nothing, so the form silently discarded every
+			 * submission. Hidden rather than deleted so it can be restored once
+			 * there is a Worker-compatible endpoint; the component and its
+			 * i18n keys are intentionally left in place.
+			 */}
+			{/*
 			<div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<button
 					onClick={() => setShowFeedback((prev) => !prev)}
@@ -88,6 +88,7 @@ export default function Menu({
 					</div>
 				)}
 			</div>
+			*/}
 
 			{/* log out */}
 			<button
