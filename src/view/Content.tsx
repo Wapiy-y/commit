@@ -23,6 +23,8 @@ interface ContentProps {
 	logout: () => void;
 	toggleLanguage: () => void;
 	i18n: i18n;
+	isDark: boolean;
+	toggleTheme: () => void;
 }
 
 export const Content = ({
@@ -43,6 +45,8 @@ export const Content = ({
 	logout,
 	toggleLanguage,
 	i18n,
+	isDark,
+	toggleTheme,
 }: ContentProps) => {
 	return (
 		<main className="max-w-md mx-auto p-4">
@@ -76,6 +80,8 @@ export const Content = ({
 					toggleLanguage={toggleLanguage}
 					t={t}
 					i18n={i18n}
+					isDark={isDark}
+					toggleTheme={toggleTheme}
 				/>
 			)}
 		</main>

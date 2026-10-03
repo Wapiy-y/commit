@@ -1,12 +1,14 @@
 function Bone({ className }: { className?: string }) {
 	return (
-		<div className={`bg-zinc-200 rounded-lg animate-pulse ${className}`} />
+		<div
+			className={`bg-zinc-200 dark:bg-zinc-700 rounded-lg animate-pulse ${className}`}
+		/>
 	);
 }
 
 function BillCardSkeleton() {
 	return (
-		<div className="bg-white p-4 rounded-xl border border-zinc-100 flex flex-col gap-3">
+		<div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 flex flex-col gap-3">
 			<div className="flex items-start justify-between">
 				<div className="flex-1 space-y-2">
 					<Bone className="h-4 w-28" />
@@ -18,7 +20,7 @@ function BillCardSkeleton() {
 				</div>
 				<Bone className="w-8 h-8 rounded-lg shrink-0" />
 			</div>
-			<div className="pt-2 border-t border-zinc-100/50 flex items-center gap-3">
+			<div className="pt-2 border-t border-zinc-100/50 dark:border-zinc-800/50 flex items-center gap-3">
 				<Bone className="h-3 w-20 shrink-0" />
 				<Bone className="h-8 flex-1 rounded-lg" />
 				<Bone className="h-6 w-10 rounded-md shrink-0" />

@@ -16,7 +16,9 @@ export const NavButton = ({
 			onClick={onClick}
 			className={cn(
 				"flex flex-col items-center gap-1 transition-colors",
-				active ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600",
+				active
+					? "text-zinc-900 dark:text-zinc-50"
+					: "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300",
 			)}
 		>
 			<Icon size={20} strokeWidth={active ? 2.5 : 2} />

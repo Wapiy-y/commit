@@ -84,22 +84,22 @@ export function BillFormModal({
 
 			<div
 				className={cn(
-					"relative bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl",
+					"relative bg-white dark:bg-zinc-900 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl",
 					"animate-in slide-in-from-bottom sm:zoom-in-95 duration-200",
 					"max-h-[90dvh] flex flex-col",
 				)}
 			>
 				<div className="flex justify-center pt-3 pb-1 sm:hidden">
-					<div className="w-10 h-1 rounded-full bg-zinc-200" />
+					<div className="w-10 h-1 rounded-full bg-zinc-200 dark:bg-zinc-700" />
 				</div>
 
-				<div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
-					<h2 className="text-base font-semibold text-zinc-900">
+				<div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
+					<h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
 						{isEdit ? t("edit_bill") : t("add_new_bill")}
 					</h2>
 					<button
 						onClick={onClose}
-						className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors"
+						className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
 					>
 						<X size={16} />
 					</button>
@@ -109,7 +109,7 @@ export function BillFormModal({
 					<form onSubmit={handleSubmit} id={formId} className="space-y-4">
 						<div>
 							<div className="flex items-center gap-1 mb-1">
-								<label className="block text-xs font-medium text-zinc-500">
+								<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
 									{t("bill_name")}
 								</label>
 								<Tooltip text={t("tooltip_bill_name")} />
@@ -119,15 +119,15 @@ export function BillFormModal({
 								required
 								value={bill.name}
 								onChange={(e) => setBill({ ...bill, name: e.target.value })}
-								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
+								className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 text-sm"
 								placeholder={t("example_netflix")}
 							/>
 						</div>
 
 						<div className="grid grid-cols-2 gap-3">
-							<div>
+							<div className="min-w-0">
 								<div className="flex items-center gap-1 mb-1">
-									<label className="block text-xs font-medium text-zinc-500">
+									<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
 										{t("amount")}
 									</label>
 									<Tooltip text={t("tooltip_amount")} />
@@ -138,13 +138,13 @@ export function BillFormModal({
 									required
 									value={bill.amount}
 									onChange={(e) => setBill({ ...bill, amount: e.target.value })}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
+									className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 text-sm"
 									placeholder="0.00"
 								/>
 							</div>
-							<div>
+							<div className="min-w-0">
 								<div className="flex items-center gap-1 mb-1">
-									<label className="block text-xs font-medium text-zinc-500">
+									<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
 										{t("due_day")}
 									</label>
 									<Tooltip text={t("tooltip_due_day")} align="right" />
@@ -158,15 +158,22 @@ export function BillFormModal({
 									onChange={(e) =>
 										setBill({ ...bill, due_day: e.target.value })
 									}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
+									className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 text-sm"
 								/>
 							</div>
 						</div>
 
-						<div className="grid grid-cols-2 gap-3">
-							<div>
+						{/*
+						 * Single column on phones: iOS renders <input type="date">
+						 * at a wide intrinsic size, and two columns leave it no
+						 * room, so it overflowed into the duration field.
+						 * `min-w-0` also lets the grid children shrink below their
+						 * content width instead of forcing the column wider.
+						 */}
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+							<div className="min-w-0">
 								<div className="flex items-center gap-1 mb-1">
-									<label className="block text-xs font-medium text-zinc-500">
+									<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
 										{t("start_date")}
 									</label>
 									<Tooltip text={t("tooltip_start_date")} />
@@ -182,12 +189,12 @@ export function BillFormModal({
 									onChange={(e) =>
 										setBill({ ...bill, start_date: e.target.value })
 									}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
+									className="w-full min-w-0 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 text-sm"
 								/>
 							</div>
-							<div>
+							<div className="min-w-0">
 								<div className="flex items-center gap-1 mb-1">
-									<label className="block text-xs font-medium text-zinc-500">
+									<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
 										{t("duration_months")}
 									</label>
 									<Tooltip text={t("tooltip_duration")} align="right" />
@@ -199,7 +206,7 @@ export function BillFormModal({
 									onChange={(e) =>
 										setBill({ ...bill, duration_months: e.target.value })
 									}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
+									className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 text-sm"
 									placeholder={t("optional")}
 								/>
 							</div>
@@ -207,7 +214,7 @@ export function BillFormModal({
 
 						<div>
 							<div className="flex items-center gap-1 mb-1">
-								<label className="block text-xs font-medium text-zinc-500">
+								<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
 									{t("category")}
 								</label>
 								<Tooltip text={t("tooltip_category")} />
@@ -216,7 +223,7 @@ export function BillFormModal({
 								required
 								value={bill.category}
 								onChange={(e) => setBill({ ...bill, category: e.target.value })}
-								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 bg-white text-sm text-zinc-900"
+								className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-50"
 							>
 								<option value="" disabled>
 									{t("select_category")}
@@ -230,14 +237,14 @@ export function BillFormModal({
 						</div>
 
 						<div>
-							<label className="block text-xs font-medium text-zinc-500 mb-1">
+							<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
 								{t("notes")}
 							</label>
 							<input
 								type="text"
 								value={bill.notes}
 								onChange={(e) => setBill({ ...bill, notes: e.target.value })}
-								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
+								className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 text-sm"
 								placeholder={
 									t("notes_placeholder") ?? "e.g. paid via Maybank (optional)"
 								}
@@ -246,11 +253,11 @@ export function BillFormModal({
 					</form>
 				</div>
 
-				<div className="px-5 py-4 border-t border-zinc-100 flex gap-3">
+				<div className="px-5 py-4 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
 					<button
 						type="button"
 						onClick={onClose}
-						className="flex-1 py-2.5 rounded-xl border border-zinc-200 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+						className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
 					>
 						{t("cancel")}
 					</button>
@@ -258,7 +265,7 @@ export function BillFormModal({
 						type="submit"
 						form={formId}
 						disabled={isSaving}
-						className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+						className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 dark:hover:bg-emerald-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
 					>
 						{isSaving ? t("saving") : t("save_bill")}
 					</button>

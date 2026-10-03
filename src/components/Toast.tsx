@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 						style={{ animation: "toast-in 0.2s ease-out" }}
 						className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium shadow pointer-events-auto ${
 							toast.type === "success"
-								? "bg-zinc-900 text-white"
+								? "bg-zinc-900 dark:bg-zinc-100 text-white"
 								: "bg-red-500 text-white"
 						}`}
 					>

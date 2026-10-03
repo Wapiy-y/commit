@@ -1,6 +1,8 @@
 function Bone({ className }: { className?: string }) {
 	return (
-		<div className={`bg-zinc-200 rounded-lg animate-pulse ${className}`} />
+		<div
+			className={`bg-zinc-200 dark:bg-zinc-700 rounded-lg animate-pulse ${className}`}
+		/>
 	);
 }
 
@@ -9,7 +11,7 @@ export function HomeSkeleton() {
 		<div className="space-y-6">
 			<Bone className="h-4 w-36" />
 
-			<div className="bg-white rounded-2xl border border-zinc-100 p-5 space-y-4">
+			<div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 space-y-4">
 				<Bone className="h-3 w-24" />
 				<Bone className="h-8 w-40" />
 				<div className="flex gap-3">
@@ -22,7 +24,7 @@ export function HomeSkeleton() {
 				{["total", "paid", "unpaid"].map((k) => (
 					<div
 						key={k}
-						className="bg-white rounded-xl border border-zinc-100 p-3 space-y-2"
+						className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800 p-3 space-y-2"
 					>
 						<Bone className="h-3 w-12" />
 						<Bone className="h-6 w-8" />
@@ -30,12 +32,12 @@ export function HomeSkeleton() {
 				))}
 			</div>
 
-			<div className="bg-white rounded-xl border border-zinc-100 overflow-hidden">
+			<div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800 overflow-hidden">
 				<Bone className="h-3 w-32 mx-4 mt-3 mb-3" />
 				{["exact", "under", "over", "unpaid"].map((k) => (
 					<div
 						key={k}
-						className="flex items-center gap-3 px-4 py-3 border-t border-zinc-50"
+						className="flex items-center gap-3 px-4 py-3 border-t border-zinc-50 dark:border-zinc-800"
 					>
 						<Bone className="w-8 h-8 rounded-full shrink-0" />
 						<div className="flex-1 space-y-1.5">

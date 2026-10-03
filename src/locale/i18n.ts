@@ -123,6 +123,9 @@ const resources = {
 			//ANALYTIC
 			analytics_title: "Analytic",
 			language: "Language",
+			appearance: "Appearance",
+			theme_light: "Light",
+			theme_dark: "Dark",
 
 			//FILTER
 			filter: "Filter",
@@ -258,6 +261,9 @@ const resources = {
 			//ANALYTIC
 			analytics_title: "Analitik",
 			language: "Bahasa",
+			appearance: "Penampilan",
+			theme_light: "Cerah",
+			theme_dark: "Gelap",
 
 			//FILTER
 			filter: "Tapis",

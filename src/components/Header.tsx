@@ -16,7 +16,7 @@ export const Header = ({
 	const { t } = useTranslation();
 
 	return (
-		<header className="bg-white border-b border-zinc-200 sticky top-0 z-10">
+		<header className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10">
 			<div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
 				<h1 className="text-lg font-semibold tracking-tight">
 					{activeTab === ActiveTab.HOME

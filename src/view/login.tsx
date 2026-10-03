@@ -10,10 +10,10 @@ interface LoginProps {
 }
 
 const INPUT_CLASS =
-	"w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900";
+	"w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100";
 
 const SUBMIT_CLASS =
-	"w-full py-2.5 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 disabled:opacity-50 transition-colors";
+	"w-full py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white rounded-lg font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 transition-colors";
 
 export default function Login({ t }: LoginProps) {
 	const [view, setView] = useState<AuthView>("login");
@@ -96,11 +96,15 @@ export default function Login({ t }: LoginProps) {
 	};
 
 	return (
-		<div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
-			<div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-zinc-200 p-8">
+		<div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4">
+			<div className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-8">
 				<div className="text-center mb-8">
-					<h1 className="text-2xl font-bold text-zinc-900 mb-2">Bilku</h1>
-					<p className="text-zinc-500 text-sm">{t("login_description")}</p>
+					<h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+						Bilku
+					</h1>
+					<p className="text-zinc-500 dark:text-zinc-400 text-sm">
+						{t("login_description")}
+					</p>
 				</div>
 
 				{/* ── Login / Signup ── */}
@@ -108,7 +112,7 @@ export default function Login({ t }: LoginProps) {
 					<form onSubmit={handleLoginOrSignup} className="space-y-4">
 						{view === "signup" && (
 							<div>
-								<label className="block text-xs font-medium text-zinc-500 mb-1">
+								<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
 									{t("login_name")}
 								</label>
 								<input
@@ -122,7 +126,7 @@ export default function Login({ t }: LoginProps) {
 							</div>
 						)}
 						<div>
-							<label className="block text-xs font-medium text-zinc-500 mb-1">
+							<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
 								{t("login_email")}
 							</label>
 							<input
@@ -135,7 +139,7 @@ export default function Login({ t }: LoginProps) {
 							/>
 						</div>
 						<div>
-							<label className="block text-xs font-medium text-zinc-500 mb-1">
+							<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
 								{t("login_password")}
 							</label>
 							<input
@@ -160,7 +164,7 @@ export default function Login({ t }: LoginProps) {
 							<button
 								type="button"
 								onClick={() => setView("forgot")}
-								className="w-full text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
+								className="w-full text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
 							>
 								{t("forgot_password")}
 							</button>
@@ -171,11 +175,11 @@ export default function Login({ t }: LoginProps) {
 				{/* ── Forgot Password ── */}
 				{view === "forgot" && (
 					<form onSubmit={handleForgotPassword} className="space-y-4">
-						<p className="text-sm text-zinc-500 text-center">
+						<p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
 							{t("forgot_password_description")}
 						</p>
 						<div>
-							<label className="block text-xs font-medium text-zinc-500 mb-1">
+							<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
 								{t("login_email")}
 							</label>
 							<input
@@ -193,7 +197,7 @@ export default function Login({ t }: LoginProps) {
 						<button
 							type="button"
 							onClick={() => setView("login")}
-							className="w-full text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
+							className="w-full text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
 						>
 							{t("back_to_login")}
 						</button>
@@ -203,11 +207,11 @@ export default function Login({ t }: LoginProps) {
 				{/* ── Reset Password ── */}
 				{view === "reset" && (
 					<form onSubmit={handleResetPassword} className="space-y-4">
-						<p className="text-sm text-zinc-500 text-center">
+						<p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
 							{t("reset_password_description")}
 						</p>
 						<div>
-							<label className="block text-xs font-medium text-zinc-500 mb-1">
+							<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
 								{t("new_password")}
 							</label>
 							<input
@@ -220,7 +224,7 @@ export default function Login({ t }: LoginProps) {
 							/>
 						</div>
 						<div>
-							<label className="block text-xs font-medium text-zinc-500 mb-1">
+							<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
 								{t("confirm_password")}
 							</label>
 							<input
@@ -243,7 +247,7 @@ export default function Login({ t }: LoginProps) {
 					<div className="mt-6 text-center">
 						<button
 							onClick={() => setView(view === "login" ? "signup" : "login")}
-							className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
+							className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
 						>
 							{view === "login" ? t("signup_info") : t("login_info")}
 						</button>
@@ -255,7 +259,7 @@ export default function Login({ t }: LoginProps) {
 						href="privacy.html"
 						target="_blank"
 						rel="noopener noreferrer"
-						className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors underline underline-offset-2"
+						className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors underline underline-offset-2"
 					>
 						{t("privacy_concern")}
 					</a>

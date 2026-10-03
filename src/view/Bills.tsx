@@ -158,7 +158,7 @@ export default function Bills({
 				onClick={() => setShowAddModal(true)}
 				disabled={!canAddBill}
 				title={canAddBill ? undefined : t("cannot_add_past_month")}
-				className="w-full py-3 px-4 bg-zinc-900 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+				className="w-full py-3 px-4 bg-zinc-900 dark:bg-zinc-100 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
 			>
 				<Plus size={18} />
 				{t("add_new_bill")}
@@ -178,14 +178,16 @@ export default function Bills({
 			)}
 
 			{error && (
-				<div className="text-center py-4 text-red-500 text-sm">{error}</div>
+				<div className="text-center py-4 text-red-500 dark:text-red-400 text-sm">
+					{error}
+				</div>
 			)}
 
 			<div className="space-y-3">
 				{loading ? (
 					<BillsSkeleton />
 				) : filteredBills.length === 0 ? (
-					<div className="text-center py-8 text-zinc-400">
+					<div className="text-center py-8 text-zinc-400 dark:text-zinc-500">
 						{bills.length > 0
 							? t("no_bills_match_filter")
 							: t("no_bills_found")}

@@ -4,12 +4,36 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/icon-512.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#18181b" />
+    <meta name="theme-color" content="#f7f7f5" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Bilku" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>Bilku</title>
+    <script>
+      // Apply the theme before first paint, otherwise the app flashes light while
+      // React mounts. Mirrors src/hooks/useTheme.ts: an explicit choice wins,
+      // otherwise follow the device setting.
+      (() => {
+        var stored = null;
+        try {
+          stored = localStorage.getItem("bilku:theme");
+        } catch {
+          // Storage blocked: fall through to the device setting.
+        }
+        var dark =
+          stored === "dark" ||
+          (stored !== "light" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) {
+          document.documentElement.classList.add("dark");
+        }
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) {
+          meta.setAttribute("content", dark ? "#09090b" : "#f7f7f5");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
