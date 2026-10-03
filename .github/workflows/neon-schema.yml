@@ -1,0 +1,157 @@
+name: Neon Schema
+
+# Validates src/db/script.sql against a throwaway Neon branch.
+#
+# The schema references neon_auth.user (UUID FK), so it can only run where Neon
+# Auth exists. The CI branch is therefore copied from `main`, not created
+# schema-only or empty. The script is then applied to a *scratch* database on
+# that branch: script.sql is idempotent (CREATE TABLE IF NOT EXISTS), so running
+# it against a database that already has the tables would pass even if the DDL
+# were broken. A scratch database starts genuinely empty, and is dropped again
+# so the branch is left as it was found.
+#
+# Requires:
+#   secret   NEON_API_KEY     - Neon API key for the project
+#   variable NEON_PROJECT_ID  - Neon project ID (Neon Console -> Settings)
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  schema:
+    name: Validate schema on a Neon branch
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Guard required configuration
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          if [ -z "$NEON_API_KEY" ]; then
+            echo "::error::Missing NEON_API_KEY. Add it under Settings -> Secrets and variables -> Actions -> Secrets."
+            exit 1
+          fi
+          if [ -z "$NEON_PROJECT_ID" ]; then
+            echo "::error::Missing NEON_PROJECT_ID. Add it under Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+
+      # Resolve the default branch ID so the CI branch is always a copy of the
+      # branch that actually carries Neon Auth, rather than relying on the
+      # project default happening to be right.
+      - name: Resolve parent branch
+        id: parent
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          response=$(curl -fsS \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            -H "Accept: application/json" \
+            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches")
+          parent_id=$(printf '%s' "$response" | jq -r '.branches[] | select(.default == true) | .id' | head -n 1)
+          if [ -z "$parent_id" ] || [ "$parent_id" = "null" ]; then
+            echo "::error::Could not resolve the default branch for project ${NEON_PROJECT_ID}."
+            exit 1
+          fi
+          echo "id=${parent_id}" >> "$GITHUB_OUTPUT"
+          echo "Parent branch: ${parent_id}"
+
+      - name: Create Neon branch
+        id: branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          parent_branch: ${{ steps.parent.outputs.id }}
+          branch_name: schema-ci-${{ github.event.pull_request.number || github.run_id }}
+
+      - name: Apply schema to a scratch database
+        env:
+          NEON_DB_URL: ${{ steps.branch.outputs.db_url }}
+        run: |
+          set -euo pipefail
+
+          # A newly created branch's compute endpoint can take a few seconds to
+          # accept connections, so the first connect is retried rather than
+          # failing the job outright.
+          for attempt in 1 2 3 4 5 6; do
+            if psql "$NEON_DB_URL" -c 'SELECT 1;' >/dev/null 2>&1; then
+              echo "Connected on attempt ${attempt}."
+              break
+            fi
+            if [ "$attempt" = "6" ]; then
+              echo "::error::Could not connect to the Neon branch after 6 attempts."
+              psql "$NEON_DB_URL" -c 'SELECT 1;'
+            fi
+            echo "Attempt ${attempt} failed; retrying in 5s..."
+            sleep 5
+          done
+
+          # psql is invoked with the URL as a single argument and no shell
+          # quoting, so characters in the generated password cannot be mangled.
+          # The action reuses a branch of the same name, so any scratch database
+          # left behind by an earlier run is cleared first.
+          psql "$NEON_DB_URL" \
+            -v ON_ERROR_STOP=1 \
+            -c 'DROP DATABASE IF EXISTS schema_ci_scratch;'
+
+          psql "$NEON_DB_URL" \
+            -v ON_ERROR_STOP=1 \
+            -c 'CREATE DATABASE schema_ci_scratch;'
+
+          scratch=$(printf '%s' "$NEON_DB_URL" | sed 's#/neondb#/schema_ci_scratch#')
+          if [ "$scratch" = "$NEON_DB_URL" ]; then
+            echo "::error::Could not derive the scratch database URL from the branch URL."
+            exit 1
+          fi
+
+          # script.sql references neon_auth.user, which a fresh database does
+          # not have; the stub supplies just that dependency so every real
+          # statement below actually executes.
+          psql "$scratch" -v ON_ERROR_STOP=1 -f .github/neon-auth-stub.sql
+
+          # ON_ERROR_STOP makes any bad DDL fail the job instead of scrolling past.
+          psql "$scratch" -v ON_ERROR_STOP=1 -f src/db/script.sql
+
+          echo "--- tables in schema_ci_scratch ---"
+          psql "$scratch" -v ON_ERROR_STOP=1 -Atc \
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;"
+
+          # Re-running must be a no-op, since script.sql is idempotent by design.
+          psql "$scratch" -v ON_ERROR_STOP=1 -f src/db/script.sql
+
+          psql "$NEON_DB_URL" \
+            -v ON_ERROR_STOP=1 \
+            -c 'DROP DATABASE schema_ci_scratch;'
+
+          echo "Schema applied to a fresh database and re-applied cleanly."
+
+      # Deleted via the API directly rather than through a third-party action,
+      # so the cleanup has no extra external dependency.
+      - name: Delete Neon branch
+        if: always()
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          BRANCH_ID: ${{ steps.branch.outputs.branch_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BRANCH_ID:-}" ]; then
+            echo "No branch was created; nothing to delete."
+            exit 0
+          fi
+          curl -fsS -X DELETE \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            -H "Accept: application/json" \
+            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches/${BRANCH_ID}"
+          echo "Deleted Neon branch ${BRANCH_ID}."
+
