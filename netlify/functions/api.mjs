@@ -239,6 +239,73 @@ app.post("/bills", requireAuth, async (req, res) => {
 	}
 });
 
+// Edit a bill's own fields. Deliberately never touches `payments`, so a bill
+// that is already paid keeps its recorded amount — only amount/paid status
+// live in `payments`, and those keep their own route.
+app.patch("/bills/:id", requireAuth, async (req, res) => {
+	const { id } = req.params;
+	const {
+		name,
+		amount,
+		due_day,
+		start_date,
+		duration_months,
+		notes,
+		category,
+	} = req.body;
+
+	// Every editable field is required, so an edit is a full replacement of the
+	// bill definition and omitted fields cannot be silently mistaken for
+	// "unchanged".
+	if (
+		name === undefined ||
+		amount === undefined ||
+		due_day === undefined ||
+		start_date === undefined ||
+		category === undefined
+	) {
+		return res.status(400).json({ error: "Missing required fields" });
+	}
+
+	if (!name || !amount || !due_day || !start_date || !category) {
+		return res.status(400).json({ error: "Missing required fields" });
+	}
+
+	const dueDayNumber = Number(due_day);
+	if (
+		!Number.isInteger(dueDayNumber) ||
+		dueDayNumber < 1 ||
+		dueDayNumber > 31
+	) {
+		return res
+			.status(400)
+			.json({ error: "due_day must be an integer between 1 and 31" });
+	}
+
+	// Unlike create, a past start_date is allowed: bills are edited after they
+	// have already started, and their original start date must stay editable.
+	try {
+		const [bill] = await sql`
+      UPDATE bills SET
+        name = ${encrypt(name)},
+        amount = ${amount},
+        due_day = ${dueDayNumber},
+        start_date = ${start_date},
+        duration_months = ${duration_months ?? null},
+        notes = ${notes ? encrypt(notes) : null},
+        category = ${category}
+      WHERE id = ${id} AND user_id = ${req.userId} AND is_active = true
+      RETURNING id, name, amount::text, due_day, start_date, duration_months, notes, category
+    `;
+
+		if (!bill) return res.status(404).json({ error: "Bill not found" });
+		res.json(decryptBill(bill));
+	} catch (err) {
+		console.error("update bill error:", err);
+		res.status(500).json({ error: "Failed to update bill" });
+	}
+});
+
 app.delete("/bills/:id", requireAuth, async (req, res) => {
 	const { id } = req.params;
 	try {
