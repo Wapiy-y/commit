@@ -15,6 +15,7 @@ interface ContentProps {
 	error: string | null;
 	isCurrentMonth: boolean;
 	onAddBill: (bill: NewBill) => Promise<void>;
+	onEditBill: (id: number, bill: NewBill) => Promise<void>;
 	onDeleteBill: (id: number) => Promise<void>;
 	onUpdatePayment: (bill: Bill, amount: string) => Promise<void>;
 	t: TFunction;
@@ -33,6 +34,7 @@ export const Content = ({
 	error,
 	isCurrentMonth,
 	onAddBill,
+	onEditBill,
 	onDeleteBill,
 	onUpdatePayment,
 	t,
@@ -57,6 +59,7 @@ export const Content = ({
 					error={error}
 					isCurrentMonth={isCurrentMonth}
 					onAddBill={onAddBill}
+					onEditBill={onEditBill}
 					onDeleteBill={onDeleteBill}
 					onUpdatePayment={onUpdatePayment}
 					t={t}

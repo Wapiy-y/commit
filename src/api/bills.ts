@@ -28,15 +28,29 @@ export const fetchBillsSummary = async (
 	return res.json();
 };
 
+/** Turns the form's string-based values into the API payload shape. */
+const billPayload = (bill: NewBill) => ({
+	...bill,
+	duration_months: bill.duration_months
+		? parseInt(bill.duration_months, 10)
+		: null,
+});
+
 export const addBill = async (newBill: NewBill): Promise<void> => {
 	await apiFetch("/api/bills", {
 		method: "POST",
-		body: JSON.stringify({
-			...newBill,
-			duration_months: newBill.duration_months
-				? parseInt(newBill.duration_months, 10)
-				: null,
-		}),
+		body: JSON.stringify(billPayload(newBill)),
+	});
+};
+
+/**
+ * Updates a bill's own fields. Never sends a payment amount, so a bill that is
+ * already marked as paid keeps the amount recorded against it.
+ */
+export const updateBill = async (id: number, bill: NewBill): Promise<void> => {
+	await apiFetch(`/api/bills/${id}`, {
+		method: "PATCH",
+		body: JSON.stringify(billPayload(bill)),
 	});
 };
 

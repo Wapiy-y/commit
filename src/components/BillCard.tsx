@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import { cn } from "@/lib/utils";
 import type { Bill } from "@/type";
@@ -9,6 +9,7 @@ interface BillCardProps {
 	displayValue: string;
 	isDirty: boolean;
 	onDelete: (id: number) => void;
+	onEdit: (bill: Bill) => void;
 	onDraftChange: (id: number, value: string) => void;
 	onConfirmClick: (bill: Bill) => void;
 	t: TFunction;
@@ -19,6 +20,7 @@ export function BillCard({
 	displayValue,
 	isDirty,
 	onDelete,
+	onEdit,
 	onDraftChange,
 	onConfirmClick,
 	t,
@@ -28,8 +30,10 @@ export function BillCard({
 	return (
 		<div
 			className={cn(
-				"bg-white p-4 rounded-xl border transition-all duration-200 flex flex-col gap-3",
-				isPaid ? "border-emerald-100 bg-emerald-50/30" : "border-zinc-100",
+				"bg-white p-4 rounded-xl border-2 transition-all duration-200 flex flex-col gap-3",
+				isPaid
+					? "border-emerald-400 bg-emerald-50 ring-1 ring-emerald-200"
+					: "border-zinc-100",
 			)}
 		>
 			<div className="flex items-start justify-between">
@@ -39,20 +43,37 @@ export function BillCard({
 							{bill.name}
 						</h3>
 						{isPaid && (
-							<span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">
+							<span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-semibold shadow-sm">
 								{t("paid_status")}
 							</span>
 						)}
 					</div>
-					<div className="text-sm text-zinc-500 flex items-center gap-3 flex-wrap">
-						<span>RM {parseFloat(bill.amount).toFixed(2)}</span>
-						<span className="w-1 h-1 bg-zinc-300 rounded-full" />
+					<div
+						className={cn(
+							"text-sm flex items-center gap-3 flex-wrap",
+							isPaid ? "text-emerald-800" : "text-zinc-500",
+						)}
+					>
+						<span className={cn(isPaid && "font-semibold")}>
+							RM {parseFloat(bill.amount).toFixed(2)}
+						</span>
+						<span
+							className={cn(
+								"w-1 h-1 rounded-full",
+								isPaid ? "bg-emerald-400" : "bg-zinc-300",
+							)}
+						/>
 						<span>
 							{t("day")} {bill.due_day}
 						</span>
 						{bill.category && (
 							<>
-								<span className="w-1 h-1 bg-zinc-300 rounded-full" />
+								<span
+									className={cn(
+										"w-1 h-1 rounded-full",
+										isPaid ? "bg-emerald-400" : "bg-zinc-300",
+									)}
+								/>
 								<span className="capitalize">
 									{t(
 										CATEGORY_OPTIONS.find((o) => o.value === bill.category)
@@ -63,24 +84,60 @@ export function BillCard({
 						)}
 					</div>
 					{bill.notes && (
-						<p className="text-xs text-zinc-400 mt-1 italic">{bill.notes}</p>
+						<p
+							className={cn(
+								"text-xs mt-1 italic",
+								isPaid ? "text-emerald-700" : "text-zinc-400",
+							)}
+						>
+							{bill.notes}
+						</p>
 					)}
 				</div>
-				<button
-					onClick={() => onDelete(bill.id)}
-					className="w-8 h-8 flex items-center justify-center text-zinc-300 hover:text-red-500 transition-colors"
-				>
-					<Trash2 size={16} />
-				</button>
+				<div className="flex items-center gap-1">
+					<button
+						onClick={() => onEdit(bill)}
+						title={t("edit_bill")}
+						className={cn(
+							"w-8 h-8 flex items-center justify-center transition-colors",
+							isPaid
+								? "text-emerald-500 hover:text-emerald-700"
+								: "text-zinc-300 hover:text-zinc-700",
+						)}
+					>
+						<Pencil size={16} />
+					</button>
+					<button
+						onClick={() => onDelete(bill.id)}
+						className="w-8 h-8 flex items-center justify-center text-zinc-300 hover:text-red-500 transition-colors"
+					>
+						<Trash2 size={16} />
+					</button>
+				</div>
 			</div>
 
-			<div className="flex flex-col gap-2 pt-2 border-t border-zinc-100/50">
+			<div
+				className={cn(
+					"flex flex-col gap-2 pt-2 border-t",
+					isPaid ? "border-emerald-200" : "border-zinc-100/50",
+				)}
+			>
 				<div className="flex items-center gap-3">
-					<label className="text-xs font-medium text-zinc-500 whitespace-nowrap">
+					<label
+						className={cn(
+							"text-xs font-medium whitespace-nowrap",
+							isPaid ? "text-emerald-700" : "text-zinc-500",
+						)}
+					>
 						{t("paid_amount")}:
 					</label>
 					<div className="relative flex-1">
-						<span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">
+						<span
+							className={cn(
+								"absolute left-3 top-1/2 -translate-y-1/2 text-sm",
+								isPaid ? "text-emerald-500" : "text-zinc-400",
+							)}
+						>
 							RM
 						</span>
 						<input
@@ -93,7 +150,7 @@ export function BillCard({
 							className={cn(
 								"w-full pl-9 pr-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 transition-all",
 								isPaid
-									? "border-emerald-200 bg-emerald-50/50 text-emerald-900 opacity-70 cursor-not-allowed"
+									? "border-emerald-300 bg-white font-semibold text-emerald-900 opacity-80 cursor-not-allowed"
 									: "border-zinc-200 focus:ring-zinc-900/10 bg-zinc-50/50",
 							)}
 						/>

@@ -31,6 +31,7 @@ const resources = {
 			payment_breakdown: "Payment Breakdown",
 			bill_title: "Bill",
 			add_new_bill: "Add New Bill",
+			edit_bill: "Edit Bill",
 			cancel: "Cancel",
 			save_bill: "Save Bill",
 			// add bill form
@@ -168,6 +169,7 @@ const resources = {
 			payment_breakdown: "Pecahan Bayaran",
 			bill_title: "Bil",
 			add_new_bill: "Tambah Bil Baharu",
+			edit_bill: "Edit Bil",
 			cancel: "Batal",
 			save_bill: "Simpan Bil",
 

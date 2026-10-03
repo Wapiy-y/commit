@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AddBillModal } from "@/components/AddBillModal";
 import { BillCard } from "@/components/BillCard";
 import { BillsSkeleton } from "@/components/BillsSkeleton";
+import { EditBillModal } from "@/components/EditBillModal";
 import { FilterBar, type PaidFilter } from "@/components/FilterBar";
 import { PaymentConfirmModal } from "@/components/PaymentConfirmModal";
 import type { Bill, NewBill } from "@/type";
@@ -14,6 +15,7 @@ interface BillsProps {
 	error: string | null;
 	isCurrentMonth: boolean;
 	onAddBill: (bill: NewBill) => Promise<void>;
+	onEditBill: (id: number, bill: NewBill) => Promise<void>;
 	onDeleteBill: (id: number) => Promise<void>;
 	onUpdatePayment: (bill: Bill, amount: string) => Promise<void>;
 	t: TFunction;
@@ -30,11 +32,13 @@ export default function Bills({
 	error,
 	isCurrentMonth,
 	onAddBill,
+	onEditBill,
 	onDeleteBill,
 	onUpdatePayment,
 	t,
 }: BillsProps) {
 	const [showAddModal, setShowAddModal] = useState(false);
+	const [editingBill, setEditingBill] = useState<Bill | null>(null);
 	const [draftAmounts, setDraftAmounts] = useState<Record<number, string>>({});
 	const [confirmPayment, setConfirmPayment] =
 		useState<PaymentConfirmState | null>(null);
@@ -111,12 +115,27 @@ export default function Bills({
 		setConfirmError(null);
 	};
 
+	const handleEditSubmit = async (values: NewBill) => {
+		if (!editingBill) return;
+		await onEditBill(editingBill.id, values);
+		setEditingBill(null);
+	};
+
 	return (
 		<div className="space-y-4">
 			{showAddModal && (
 				<AddBillModal
 					onClose={() => setShowAddModal(false)}
 					onSubmit={onAddBill}
+					t={t}
+				/>
+			)}
+
+			{editingBill && (
+				<EditBillModal
+					bill={editingBill}
+					onClose={() => setEditingBill(null)}
+					onSubmit={handleEditSubmit}
 					t={t}
 				/>
 			)}
@@ -183,6 +202,7 @@ export default function Bills({
 								displayValue={displayValue}
 								isDirty={isDirty}
 								onDelete={onDeleteBill}
+								onEdit={setEditingBill}
 								onDraftChange={handleDraftChange}
 								onConfirmClick={handleConfirmClick}
 								t={t}

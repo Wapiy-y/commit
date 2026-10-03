@@ -8,6 +8,7 @@ import {
 	deleteBill,
 	fetchBills,
 	fetchBillsSummary,
+	updateBill,
 	updatePayment,
 } from "./api/bills";
 import { Header } from "./components/Header";
@@ -134,6 +135,11 @@ export default function App() {
 		await reloadAll();
 	};
 
+	const handleEditBill = async (id: number, values: NewBill) => {
+		await updateBill(id, values);
+		await reloadAll();
+	};
+
 	const handleUpdatePayment = async (bill: Bill, amount: string) => {
 		const numAmount = parseFloat(amount);
 		if (Number.isNaN(numAmount)) return;
@@ -205,6 +211,7 @@ export default function App() {
 				error={error}
 				isCurrentMonth={isCurrentMonth}
 				onAddBill={handleAddBill}
+				onEditBill={handleEditBill}
 				onDeleteBill={handleDeleteBill}
 				onUpdatePayment={handleUpdatePayment}
 				t={t}
