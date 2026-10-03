@@ -1,43 +1,5 @@
 @import "tailwindcss";
 
-html {
-	/* Stop Safari from inflating text in landscape on iOS. */
-	-webkit-text-size-adjust: 100%;
-	text-size-adjust: 100%;
-}
-
-/*
- * iOS / PWA helpers.
- *
- * `env(safe-area-inset-*)` only reports non-zero values when the viewport meta
- * includes `viewport-fit=cover` (see index.html). `pb-safe` pads by the inset
- * itself, for sheets that sit flush against the bottom edge. `pb-safe-nav`
- * keeps a normal 24px baseline and adds the inset on top, so the tab bar does
- * not collapse on devices without a home indicator.
- */
-@utility pb-safe {
-	padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-@utility pb-safe-nav {
-	padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
-}
-
-/*
- * Safari on iOS zooms the whole page when a focused form control renders below
- * 16px, which leaves the modal scrolled sideways and hard to use. Keeping
- * controls at 16px on small screens prevents that zoom; larger screens keep the
- * compact type scale.
- */
-@utility form-control {
-	font-size: 1rem;
-	touch-action: manipulation;
-
-	@media (min-width: 640px) {
-		font-size: 0.875rem;
-	}
-}
-
 @keyframes toast-in {
 	from {
 		opacity: 0;
