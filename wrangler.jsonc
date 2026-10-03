@@ -1,0 +1,34 @@
+{
+	// Cloudflare Workers configuration.
+	// Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+	"$schema": "node_modules/wrangler/config-schema.json",
+
+	"name": "bilku",
+	"main": "cloudflare/worker.ts",
+
+	// nodejs_compat provides the Node APIs the API relies on: node:crypto for
+	// AES-GCM and Buffer.
+	"compatibility_date": "2026-10-01",
+	"compatibility_flags": ["nodejs_compat"],
+
+	"assets": {
+		"directory": "dist",
+		// Required: without an explicit binding the ASSETS binding is not exposed
+		// on `env`, so the Worker cannot reach the static assets.
+		"binding": "ASSETS",
+		// Unknown paths fall back to index.html, so client-side routes survive a
+		// refresh.
+		"not_found_handling": "single-page-application",
+		// Only /api/* reaches the Worker script; all other traffic is served
+		// directly by the asset worker.
+		"run_worker_first": ["/api/*"]
+	},
+
+	// Secrets are NOT stored here. Set them with:
+	//   npx wrangler secret put DATABASE_URL
+	//   npx wrangler secret put ENCRYPTION_KEY
+	//   npx wrangler secret put NEON_AUTH_URL
+	"observability": {
+		"enabled": true
+	}
+}
