@@ -5,6 +5,14 @@
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
+	"overrides": [
+		{
+			"includes": ["src/index.css"],
+			"formatter": { "enabled": false },
+			"linter": { "enabled": false },
+			"assist": { "enabled": false }
+		}
+	],
 	"files": {
 		"ignoreUnknown": false
 	},

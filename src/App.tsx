@@ -213,7 +213,7 @@ export default function App() {
 				logout={logout}
 			/>
 
-			<nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 px-6 py-3 pb-6 safe-area-bottom">
+			<nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 px-6 pt-3 pb-safe-nav">
 				<div className="max-w-md mx-auto flex justify-around items-center">
 					<NavButton
 						icon={Home}
