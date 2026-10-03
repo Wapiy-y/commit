@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/*
+ * Class-based dark mode. Tailwind v4 defaults `dark:` to the OS media query,
+ * but the app exposes an in-app toggle in the Menu, so switching must be driven
+ * by a `dark` class on <html> (see src/hooks/useTheme.ts).
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @keyframes toast-in {
 	from {
 		opacity: 0;

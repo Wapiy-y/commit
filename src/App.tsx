@@ -14,6 +14,7 @@ import {
 import { Header } from "./components/Header";
 import { NavButton } from "./components/NavButton";
 import { useAuthSession } from "./hooks/useAuthSession";
+import { useTheme } from "./hooks/useTheme";
 import { useToast } from "./hooks/useToast";
 import type { Bill, BillSummary, NewBill } from "./type";
 import { ActiveTab } from "./type";
@@ -29,6 +30,7 @@ export default function App() {
 		: null;
 
 	const toast = useToast();
+	const { isDark, toggleTheme } = useTheme();
 
 	const [activeTab, setActiveTab] = useState<ActiveTab>(ActiveTab.HOME);
 	const [currentDate, setCurrentDate] = useState(new Date());
@@ -189,10 +191,10 @@ export default function App() {
 
 	if (authChecking) {
 		return (
-			<div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+			<div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
 				<div className="flex flex-col items-center gap-3">
-					<div className="w-8 h-8 border-2 border-zinc-300 border-t-zinc-800 rounded-full animate-spin" />
-					<p className="text-sm text-zinc-400">
+					<div className="w-8 h-8 border-2 border-zinc-300 dark:border-zinc-700 border-t-zinc-800 rounded-full animate-spin" />
+					<p className="text-sm text-zinc-400 dark:text-zinc-500">
 						{t("loading") ?? "Loading..."}
 					</p>
 				</div>
@@ -205,7 +207,7 @@ export default function App() {
 	}
 
 	return (
-		<div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans pb-20">
+		<div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans pb-20">
 			<Header
 				activeTab={activeTab}
 				currentDate={currentDate}
@@ -230,9 +232,11 @@ export default function App() {
 				i18n={i18n}
 				toggleLanguage={toggleLanguage}
 				logout={logout}
+				isDark={isDark}
+				toggleTheme={toggleTheme}
 			/>
 
-			<nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 px-6 py-3 pb-6 safe-area-bottom">
+			<nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 px-6 py-3 pb-6 safe-area-bottom">
 				<div className="max-w-md mx-auto flex justify-around items-center">
 					<NavButton
 						icon={Home}

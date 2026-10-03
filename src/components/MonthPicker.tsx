@@ -55,7 +55,7 @@ export const MonthPicker = ({
 		<div className="relative" ref={ref}>
 			<button
 				onClick={() => setOpen((v) => !v)}
-				className="flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+				className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
 			>
 				{format(currentDate, "MMM yyyy")}
 				<svg
@@ -70,18 +70,18 @@ export const MonthPicker = ({
 			</button>
 
 			{open && (
-				<div className="absolute right-0 mt-2 bg-white border border-zinc-200 rounded-xl shadow-lg p-3 w-56 z-20">
+				<div className="absolute right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg p-3 w-56 z-20">
 					<div className="flex items-center justify-between mb-3">
 						<button
 							onClick={() => setPickerYear((y) => y - 1)}
-							className="p-1 hover:bg-zinc-100 rounded-md transition-colors"
+							className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
 						>
 							<ChevronLeft size={15} />
 						</button>
 						<span className="text-sm font-semibold">{pickerYear}</span>
 						<button
 							onClick={() => setPickerYear((y) => y + 1)}
-							className="p-1 hover:bg-zinc-100 rounded-md transition-colors"
+							className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
 						>
 							<ChevronRight size={15} />
 						</button>
@@ -98,8 +98,8 @@ export const MonthPicker = ({
 									onClick={() => handleMonthSelect(i)}
 									className={`py-1.5 rounded-lg text-sm font-medium transition-colors ${
 										isSelected
-											? "bg-zinc-900 text-white"
-											: "hover:bg-zinc-100 text-zinc-700"
+											? "bg-zinc-900 dark:bg-zinc-100 text-white"
+											: "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200"
 									}`}
 								>
 									{m}

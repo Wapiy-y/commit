@@ -27,6 +27,9 @@ dist-ssr
 node_modules/
 dist/
 
+# Local build scratch (esbuild's default temp dir is unwritable in some sandboxes)
+.build-tmp/
+
 # Cloudflare local dev secrets
 .dev.vars
 .wrangler/
