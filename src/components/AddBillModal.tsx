@@ -51,8 +51,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 				className={cn(
 					"relative bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl",
 					"animate-in slide-in-from-bottom sm:zoom-in-95 duration-200",
-					"flex flex-col pb-safe",
-					"max-h-[92svh] sm:max-h-[90dvh]",
+					"max-h-[90dvh] flex flex-col",
 				)}
 			>
 				<div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -71,7 +70,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 					</button>
 				</div>
 
-				<div className="overflow-y-auto overscroll-contain flex-1 min-h-0 px-5 py-4">
+				<div className="overflow-y-auto flex-1 px-5 py-4">
 					<form
 						onSubmit={handleSubmit}
 						id="add-bill-form"
@@ -91,7 +90,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 								onChange={(e) =>
 									setNewBill({ ...newBill, name: e.target.value })
 								}
-								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 form-control"
+								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
 								placeholder={t("example_netflix")}
 							/>
 						</div>
@@ -112,7 +111,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 									onChange={(e) =>
 										setNewBill({ ...newBill, amount: e.target.value })
 									}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 form-control"
+									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
 									placeholder="0.00"
 								/>
 							</div>
@@ -132,7 +131,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 									onChange={(e) =>
 										setNewBill({ ...newBill, due_day: e.target.value })
 									}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 form-control"
+									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
 								/>
 							</div>
 						</div>
@@ -160,7 +159,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 									onChange={(e) =>
 										setNewBill({ ...newBill, start_date: e.target.value })
 									}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 form-control"
+									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
 								/>
 							</div>
 							<div>
@@ -177,7 +176,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 									onChange={(e) =>
 										setNewBill({ ...newBill, duration_months: e.target.value })
 									}
-									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 form-control"
+									className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
 									placeholder={t("optional")}
 								/>
 							</div>
@@ -196,7 +195,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 								onChange={(e) =>
 									setNewBill({ ...newBill, category: e.target.value })
 								}
-								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 bg-white text-zinc-900 form-control"
+								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 bg-white text-sm text-zinc-900"
 							>
 								<option value="" disabled>
 									{t("select_category")}
@@ -219,7 +218,7 @@ export function AddBillModal({ onClose, onSubmit, t }: AddBillModalProps) {
 								onChange={(e) =>
 									setNewBill({ ...newBill, notes: e.target.value })
 								}
-								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 form-control"
+								className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 text-sm"
 								placeholder={
 									t("notes_placeholder") ?? "e.g. paid via Maybank (optional)"
 								}

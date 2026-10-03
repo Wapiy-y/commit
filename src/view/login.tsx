@@ -10,7 +10,7 @@ interface LoginProps {
 }
 
 const INPUT_CLASS =
-	"w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900 form-control";
+	"w-full px-3 py-2 rounded-lg border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-900";
 
 const SUBMIT_CLASS =
 	"w-full py-2.5 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 disabled:opacity-50 transition-colors";
