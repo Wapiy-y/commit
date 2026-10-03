@@ -20,16 +20,4 @@ export default defineConfig([
 			globals: globals.browser,
 		},
 	},
-	{
-		// Backend: Netlify Functions run on Node, so they need server globals
-		// and none of the React rules. Scoped to its own block so the backend
-		// can be linted and gated independently of the app code.
-		files: ["netlify/functions/**/*.mjs"],
-		extends: [js.configs.recommended],
-		languageOptions: {
-			ecmaVersion: 2022,
-			sourceType: "module",
-			globals: globals.node,
-		},
-	},
 ]);

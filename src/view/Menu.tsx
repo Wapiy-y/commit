@@ -55,41 +55,6 @@ export default function Menu({
 				<ChevronRight size={20} className="text-zinc-300" />
 			</button>
 
-			{/*
-			 * Feedback is disabled.
-			 *
-			 * FeedbackForm posts to "/" with data-netlify="true", which is a
-			 * Netlify Forms endpoint. On the Cloudflare Worker that POST reaches
-			 * the Worker and does nothing, so the form silently discarded every
-			 * submission. Hidden rather than deleted so it can be restored once
-			 * there is a Worker-compatible endpoint; the component and its
-			 * i18n keys are intentionally left in place.
-			 */}
-			{/*
-			<div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-				<button
-					onClick={() => setShowFeedback((prev) => !prev)}
-					className="w-full flex items-center gap-4 p-4 hover:bg-zinc-50 transition-colors"
-				>
-					<div className="p-2 bg-violet-50 text-violet-600 rounded-lg">
-						<MessageSquare size={24} />
-					</div>
-					<div className="flex-1 text-left">
-						<h3 className="font-medium text-zinc-900">{t("feedback")}</h3>
-					</div>
-					<ChevronRight
-						size={20}
-						className={`text-zinc-300 transition-transform ${showFeedback ? "rotate-90" : ""}`}
-					/>
-				</button>
-				{showFeedback && (
-					<div className="px-4 pb-4">
-						<FeedbackForm t={t} email={user?.email} />
-					</div>
-				)}
-			</div>
-			*/}
-
 			{/* log out */}
 			<button
 				onClick={logout}

@@ -27,9 +27,6 @@ dist-ssr
 node_modules/
 dist/
 
-# Local Netlify folder
-.netlify/
-
 # Cloudflare local dev secrets
 .dev.vars
 .wrangler/
