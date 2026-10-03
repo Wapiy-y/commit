@@ -17,6 +17,7 @@ const resources = {
 			paid: "Total Paid (estimate)",
 			true_paid: "Total Paid",
 			remaining: "Remaining (estimate)",
+			toggle_amount_visibility: "Hide or show amounts",
 			//stats card
 			total_paid: "Paid",
 			total_bill: "Bill",
@@ -149,6 +150,7 @@ const resources = {
 			paid: "Telah Dibayar (anggaran)",
 			true_paid: "Telah Dibayar",
 			remaining: "Baki (anggaran)",
+			toggle_amount_visibility: "Sembunyi atau tunjuk jumlah",
 
 			// stats card
 			total_paid: "Dibayar",
