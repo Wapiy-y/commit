@@ -91,7 +91,7 @@ export function BillCard({
 							onChange={(e) => onDraftChange(bill.id, e.target.value)}
 							placeholder="0.00"
 							className={cn(
-								"w-full pl-9 pr-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 transition-all",
+								"w-full pl-9 pr-3 py-1.5 rounded-lg border focus:outline-none focus:ring-2 transition-all form-control",
 								isPaid
 									? "border-emerald-200 bg-emerald-50/50 text-emerald-900 opacity-70 cursor-not-allowed"
 									: "border-zinc-200 focus:ring-zinc-900/10 bg-zinc-50/50",
