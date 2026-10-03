@@ -208,11 +208,13 @@ app.post("/bills", requireAuth, async (req, res) => {
 		return res.status(400).json({ error: "Missing required fields" });
 	}
 
-	// Validate start_date is current month or future
+	// Validate start_date is this month or later. Compared as full dates rather
+	// than year-month: the form's date input permits any day from the 1st of the
+	// current month, so a month-only comparison would reject a date the form
+	// itself offers.
 	const now = new Date();
-	const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-	const startYearMonth = start_date.slice(0, 7);
-	if (startYearMonth < currentYearMonth) {
+	const firstOfThisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+	if (start_date < firstOfThisMonth) {
 		return res.status(400).json({ error: "Start date cannot be in the past" });
 	}
 

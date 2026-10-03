@@ -13,7 +13,8 @@ interface ContentProps {
 	summary: BillSummary | null;
 	loading: boolean;
 	error: string | null;
-	isCurrentMonth: boolean;
+	canAddBill: boolean;
+	newBillStartDate: string;
 	onAddBill: (bill: NewBill) => Promise<void>;
 	onEditBill: (id: number, bill: NewBill) => Promise<void>;
 	onDeleteBill: (id: number) => Promise<void>;
@@ -32,7 +33,8 @@ export const Content = ({
 	summary,
 	loading,
 	error,
-	isCurrentMonth,
+	canAddBill,
+	newBillStartDate,
 	onAddBill,
 	onEditBill,
 	onDeleteBill,
@@ -57,7 +59,8 @@ export const Content = ({
 					bills={bills}
 					loading={loading}
 					error={error}
-					isCurrentMonth={isCurrentMonth}
+					canAddBill={canAddBill}
+					newBillStartDate={newBillStartDate}
 					onAddBill={onAddBill}
 					onEditBill={onEditBill}
 					onDeleteBill={onDeleteBill}

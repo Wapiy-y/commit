@@ -13,7 +13,8 @@ interface BillsProps {
 	bills: Bill[];
 	loading: boolean;
 	error: string | null;
-	isCurrentMonth: boolean;
+	canAddBill: boolean;
+	newBillStartDate: string;
 	onAddBill: (bill: NewBill) => Promise<void>;
 	onEditBill: (id: number, bill: NewBill) => Promise<void>;
 	onDeleteBill: (id: number) => Promise<void>;
@@ -30,7 +31,8 @@ export default function Bills({
 	bills,
 	loading,
 	error,
-	isCurrentMonth,
+	canAddBill,
+	newBillStartDate,
 	onAddBill,
 	onEditBill,
 	onDeleteBill,
@@ -125,6 +127,7 @@ export default function Bills({
 		<div className="space-y-4">
 			{showAddModal && (
 				<AddBillModal
+					startDate={newBillStartDate}
 					onClose={() => setShowAddModal(false)}
 					onSubmit={onAddBill}
 					t={t}
@@ -153,7 +156,8 @@ export default function Bills({
 
 			<button
 				onClick={() => setShowAddModal(true)}
-				disabled={!isCurrentMonth}
+				disabled={!canAddBill}
+				title={canAddBill ? undefined : t("cannot_add_past_month")}
 				className="w-full py-3 px-4 bg-zinc-900 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
 			>
 				<Plus size={18} />

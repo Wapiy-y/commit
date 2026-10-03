@@ -15,6 +15,8 @@ interface BillFormModalProps {
 	mode: BillFormMode;
 	/** Required when mode is "edit"; ignored when creating. */
 	initialValues?: NewBill;
+	/** Create mode only: prefilled start date. Defaults to today. */
+	startDate?: string;
 	onClose: () => void;
 	onSubmit: (bill: NewBill) => Promise<void>;
 	t: TFunction;
@@ -45,12 +47,20 @@ const CURRENT_MONTH_START = format(
 export function BillFormModal({
 	mode,
 	initialValues,
+	startDate,
 	onClose,
 	onSubmit,
 	t,
 }: BillFormModalProps) {
 	const isEdit = mode === "edit";
-	const [bill, setBill] = useState<NewBill>(initialValues ?? EMPTY_NEW_BILL);
+	const [bill, setBill] = useState<NewBill>(() =>
+		initialValues
+			? initialValues
+			: {
+					...EMPTY_NEW_BILL,
+					start_date: startDate ?? EMPTY_NEW_BILL.start_date,
+				},
+	);
 	const [isSaving, setIsSaving] = useState(false);
 	const formId = isEdit ? "edit-bill-form" : "add-bill-form";
 

@@ -42,7 +42,18 @@ export default function App() {
 
 	const currentMonthYear = format(currentDate, "yyyy-MM");
 	const todayMonthYear = format(new Date(), "yyyy-MM");
-	const isCurrentMonth = currentMonthYear === todayMonthYear;
+
+	// The API accepts a start date in the current month or any future month, so
+	// bills may be added while viewing an upcoming month. Only past months are
+	// blocked. YYYY-MM compares correctly as a string.
+	const canAddBill = currentMonthYear >= todayMonthYear;
+
+	// New bills default to the month being viewed when that is in the future, so
+	// adding from next month does not silently create a bill due today.
+	const newBillStartDate =
+		currentMonthYear > todayMonthYear
+			? `${currentMonthYear}-01`
+			: format(new Date(), "yyyy-MM-dd");
 
 	// Summary: load eagerly on mount and whenever month changes
 	useEffect(() => {
@@ -209,7 +220,8 @@ export default function App() {
 				summary={summary}
 				loading={loading}
 				error={error}
-				isCurrentMonth={isCurrentMonth}
+				canAddBill={canAddBill}
+				newBillStartDate={newBillStartDate}
 				onAddBill={handleAddBill}
 				onEditBill={handleEditBill}
 				onDeleteBill={handleDeleteBill}
