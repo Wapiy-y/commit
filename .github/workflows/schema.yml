@@ -1,0 +1,110 @@
+name: Schema
+
+# Validates src/db/script.sql against a throwaway PostgreSQL service container.
+#
+# Nothing else executes script.sql: there is no migration tooling and it is
+# applied by hand in the Neon SQL editor, so a typo is only discovered when
+# someone pastes it into the console.
+#
+# Why a scratch database: script.sql is idempotent (CREATE TABLE IF NOT EXISTS).
+# Applying it to a database that already has the tables would pass even if the
+# DDL were broken, because IF NOT EXISTS skips the body. An empty scratch
+# database forces every statement to actually execute.
+#
+# Why plain PostgreSQL rather than a Neon branch: the schema is two tables, a
+# generated column and two indexes — no Neon-specific constructs — so a stock
+# PostgreSQL 16 container exercises exactly the same SQL, with no API key to
+# configure, no third-party action, no cost, and the ability to run the same
+# commands locally against any PostgreSQL.
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  schema:
+    name: Validate schema on PostgreSQL
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        # The job only starts once this passes, so no connection retry is needed.
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Defaults for the client tools; the service container is reachable on
+    # localhost because its port is published by `services`.
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create an empty scratch database
+        run: |
+          set -euo pipefail
+          psql -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE schema_ci_scratch;'
+
+      - name: Apply schema to the scratch database
+        run: |
+          set -euo pipefail
+
+          # script.sql references neon_auth.user, which is created by Neon Auth
+          # and therefore absent from a stock PostgreSQL instance; the stub
+          # supplies just that dependency so every real statement below runs.
+          psql -d schema_ci_scratch -v ON_ERROR_STOP=1 -f .github/neon-auth-stub.sql
+
+          # ON_ERROR_STOP makes bad DDL fail the job instead of scrolling past.
+          psql -d schema_ci_scratch -v ON_ERROR_STOP=1 -f src/db/script.sql
+
+      - name: Verify the schema landed
+        run: |
+          set -euo pipefail
+
+          echo "--- tables ---"
+          tables=$(psql -d schema_ci_scratch -Atc \
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;")
+          echo "$tables"
+
+          for expected in bills payments; do
+            if ! printf '%s\n' "$tables" | grep -qx "$expected"; then
+              echo "::error::Expected table '${expected}' was not created."
+              exit 1
+            fi
+          done
+
+          echo "--- foreign keys ---"
+          fks=$(psql -d schema_ci_scratch -Atc \
+            "SELECT conrelid::regclass || ' -> ' || confrelid::regclass FROM pg_constraint WHERE contype = 'f' ORDER BY 1;")
+          echo "$fks"
+
+          # The FK to neon_auth.user only exists if the stub satisfied it, which
+          # is the whole point of applying the real schema to an empty database.
+          if ! printf '%s\n' "$fks" | grep -q 'neon_auth'; then
+            echo "::error::No foreign key to neon_auth.\"user\" — the stub did not take effect."
+            exit 1
+          fi
+
+          echo "--- generated column ---"
+          psql -d schema_ci_scratch -Atc \
+            "SELECT table_name || '.' || column_name FROM information_schema.columns WHERE is_generated = 'ALWAYS';"
+
+      - name: Re-apply to prove idempotency
+        run: |
+          set -euo pipefail
+          # script.sql is idempotent by design; a second run must be a clean no-op.
+          psql -d schema_ci_scratch -v ON_ERROR_STOP=1 -f src/db/script.sql
+          echo "Schema re-applied cleanly."
