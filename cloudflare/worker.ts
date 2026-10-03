@@ -11,8 +11,7 @@
  *
  * The execution context is typed structurally rather than as the ambient
  * Workers `ExecutionContext`, because `@cloudflare/workers-types` conflicts with
- * the DOM lib this app also compiles against. `api.fetch` only needs
- * `waitUntil` and `passThroughOnException`.
+ * the DOM lib this app also compiles against.
  */
 
 import type { Bindings } from "./api";

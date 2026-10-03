@@ -1,13 +1,14 @@
 /**
- * The Bilku API, ported from Express (netlify/functions/api.mjs) to Hono so it
- * can run on Cloudflare Workers.
+ * The Bilku API. Runs on Cloudflare Workers via Hono.
  *
- * Behaviour is intentionally identical to the Express version: same paths, same
- * status codes, same response shapes, same SQL. The Netlify function stays in
- * place until the Worker is verified in production.
+ * It began as a port of a serverless Express function, and the behaviour is kept
+ * identical to it: same paths, same status codes, same response shapes, same
+ * SQL. That legacy implementation is gone, but its encryption format is still
+ * preserved and asserted by `crypto-parity.mjs`, because data written under it
+ * remains in the database.
  *
- * Two things change in the port, both machine-checked:
- *   - `req.userId` becomes a typed context variable (`c.get("userId")`).
+ * Two consequences of the port:
+ *   - `req.userId` is a typed context variable (`c.get("userId")`).
  *   - JSON parsing is per-route (`await c.req.json()`) instead of global
  *     middleware, which is how Hono does it.
  */

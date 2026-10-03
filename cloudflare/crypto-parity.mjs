@@ -1,7 +1,11 @@
 /**
- * Verifies the Hono port's encryption is byte-compatible with the Express
- * implementation, in both directions. If these disagree, every existing
- * encrypted bill name/notes in the database would become unreadable.
+ * Verifies the Hono API's encryption is byte-compatible with the legacy
+ * serverless implementation, in both directions. If these disagree, every
+ * existing encrypted bill name/notes in the database becomes unreadable.
+ *
+ * The legacy implementation has been removed, so its encryption code is kept
+ * inline below as a frozen reference implementation. This is what guarantees
+ * existing rows still decrypt after the platform migration.
  *
  * Run: node crypto-parity.mjs
  */
@@ -10,8 +14,8 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 const ALGORITHM = "aes-256-gcm";
 const KEY = randomBytes(32).toString("hex");
 
-// ── Express version (netlify/functions/api.mjs), copied verbatim ──────────────
-function encryptExpress(text) {
+// ── Legacy reference implementation of the stored format ──────────────────────
+function encryptLegacy(text) {
 	const iv = randomBytes(16);
 	const cipher = createCipheriv(ALGORITHM, Buffer.from(KEY, "hex"), iv);
 	const encrypted = Buffer.concat([
@@ -22,7 +26,7 @@ function encryptExpress(text) {
 	return `${iv.toString("hex")}:${tag.toString("hex")}:${encrypted.toString("hex")}`;
 }
 
-function decryptExpress(encoded) {
+function decryptLegacy(encoded) {
 	try {
 		const parts = encoded.split(":");
 		if (parts.length !== 3) return encoded;
@@ -89,10 +93,10 @@ const samples = [
 ];
 
 let failures = 0;
-console.log("=== 1. decrypt Hono -> Express (cross-implementation) ===");
+console.log("=== 1. cross-implementation decrypt (legacy <-> hono) ===");
 for (const text of samples) {
-	const a = decryptExpress(encryptHono(text));
-	const b = decryptHono(encryptExpress(text));
+	const a = decryptLegacy(encryptHono(text));
+	const b = decryptHono(encryptLegacy(text));
 	const ok = a === text && b === text;
 	if (!ok) failures++;
 	console.log(
@@ -102,18 +106,18 @@ for (const text of samples) {
 
 console.log("\n=== 2. same length/casing rules (hex format) ===");
 const h = encryptHono("Netflix");
-const e = encryptExpress("Netflix");
+const e = encryptLegacy("Netflix");
 const shape = (s) => s.split(":").map((p) => p.length);
 console.log(
-	`  hono    parts: ${shape(h).join(",")}  lowercase=${h === h.toLowerCase()}`,
+	`  hono   parts: ${shape(h).join(",")}  lowercase=${h === h.toLowerCase()}`,
 );
 console.log(
-	`  express parts: ${shape(e).join(",")}  lowercase=${e === e.toLowerCase()}`,
+	`  legacy parts: ${shape(e).join(",")}  lowercase=${e === e.toLowerCase()}`,
 );
 
 console.log("\n=== 3. legacy plaintext passthrough ===");
 for (const legacy of ["plain name", "a:b", "", "x:y:z:extra"]) {
-	const a = decryptExpress(legacy);
+	const a = decryptLegacy(legacy);
 	const b = decryptHono(legacy);
 	const ok = a === legacy ? b === legacy : a === b;
 	if (!ok) failures++;

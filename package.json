@@ -7,13 +7,11 @@
 		"dev": "vite",
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
-		"lint:functions": "eslint \"netlify/functions/**/*.mjs\"",
-		"check:functions": "node --check netlify/functions/api.mjs",
-		"check:backend": "npm run lint:functions && npm run check:functions",
 		"preview": "vite preview",
-		"netlify": "netlify dev",
 		"format": "biome check",
-		"format:fix": "biome check --write"
+		"format:fix": "biome check --write",
+		"dev:worker": "wrangler dev",
+		"deploy": "wrangler deploy"
 	},
 	"dependencies": {
 		"@neondatabase/neon-js": "^0.2.0-beta.1",
@@ -24,6 +22,7 @@
 		"hono": "^4.13.12",
 		"jose": "^6.2.2",
 		"lucide-react": "^0.577.0",
+		"pg": "^8.23.1",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",
 		"react-i18next": "^16.5.6",
