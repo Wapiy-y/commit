@@ -32,6 +32,8 @@ const resources = {
 			bill_title: "Bill",
 			add_new_bill: "Add New Bill",
 			edit_bill: "Edit Bill",
+			cannot_add_past_month:
+				"Bills cannot start in a past month. Go to this month or later to add one.",
 			cancel: "Cancel",
 			save_bill: "Save Bill",
 			// add bill form
@@ -170,6 +172,8 @@ const resources = {
 			bill_title: "Bil",
 			add_new_bill: "Tambah Bil Baharu",
 			edit_bill: "Edit Bil",
+			cannot_add_past_month:
+				"Bil tidak boleh bermula pada bulan lalu. Pergi ke bulan ini atau bulan akan datang untuk menambah.",
 			cancel: "Batal",
 			save_bill: "Simpan Bil",
 
