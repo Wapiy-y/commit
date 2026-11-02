@@ -4,6 +4,7 @@ import { ActiveTab } from "@/type";
 import Bills from "./Bills";
 import HomePage from "./Home";
 import Menu from "./Menu";
+import Record from "./Record";
 
 interface ContentProps {
 	activeTab: ActiveTab;
@@ -71,6 +72,9 @@ export const Content = ({
 					onUpdatePayment={onUpdatePayment}
 					t={t}
 				/>
+			)}
+			{activeTab === ActiveTab.RECORD && (
+				<Record t={t} language={i18n.language} />
 			)}
 			{activeTab === ActiveTab.MENU && (
 				<Menu

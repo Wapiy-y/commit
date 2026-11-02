@@ -79,7 +79,7 @@ jobs:
             "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;")
           echo "$tables"
 
-          for expected in bills payments; do
+          for expected in bills payments bill_activity; do
             if ! printf '%s\n' "$tables" | grep -qx "$expected"; then
               echo "::error::Expected table '${expected}' was not created."
               exit 1
@@ -108,3 +108,12 @@ jobs:
           # script.sql is idempotent by design; a second run must be a clean no-op.
           psql -d schema_ci_scratch -v ON_ERROR_STOP=1 -f src/db/script.sql
           echo "Schema re-applied cleanly."
+
+      - name: Verify activity writes are atomic and correctly recorded
+        run: |
+          set -euo pipefail
+          # Runs the same data-modifying CTE statements the API uses, then asserts
+          # what they recorded: one row per mutation, a correct before/after diff,
+          # a prev_amount chain, payment rows surviving a soft delete, and a
+          # rejected activity insert rolling back the bill change with it.
+          psql -d schema_ci_scratch -v ON_ERROR_STOP=1 -f .github/activity-smoke.sql

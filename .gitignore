@@ -33,3 +33,6 @@ dist/
 # Cloudflare local dev secrets
 .dev.vars
 .wrangler/
+
+# tsc -b build info
+tsconfig.tsbuildinfo

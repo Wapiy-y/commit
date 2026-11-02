@@ -36,6 +36,43 @@ export interface BillSummary {
 	total_excess: number;
 }
 
+/** Every action the API records in `bill_activity`. */
+export type ActivityAction =
+	| "bill_created"
+	| "bill_updated"
+	| "payment_recorded"
+	| "payment_changed"
+	| "payment_cleared"
+	| "bill_deleted";
+
+export interface ActivitySnapshot {
+	name?: string;
+	notes?: string | null;
+	amount?: string;
+	due_day?: number;
+	start_date?: string;
+	duration_months?: number | null;
+	category?: string;
+}
+
+export interface BillActivity {
+	id: number;
+	bill_id: number;
+	bill_name: string;
+	action: ActivityAction;
+	month_year: string | null;
+	amount: number | null;
+	prev_amount: number | null;
+	changes: {
+		before?: ActivitySnapshot;
+		after?: ActivitySnapshot;
+	} | null;
+	client: "web" | "ios";
+	created_at: string;
+	/** YYYY-MM, derived from created_at so the client can group without parsing dates. */
+	month: string;
+}
+
 export interface User {
 	email: string;
 	name: string;
@@ -44,6 +81,7 @@ export interface User {
 export enum ActiveTab {
 	HOME = "home",
 	BILL = "bill",
+	RECORD = "record",
 	MENU = "menu",
 	ANALYTIC = "analytic",
 }

@@ -119,6 +119,23 @@ const resources = {
 
 			//MENU
 			menu_title: "Menu",
+			//RECORD
+			record_title: "Record",
+			record_empty:
+				"Nothing recorded yet. Changes to your bills will appear here.",
+			record_failed: "Could not load your records. Try again.",
+			record_paid_total: "{{amount}} paid",
+			record_event_count: "{{count}} changes",
+			record_load_older: "Load older",
+			action_bill_created: "Bill created \u00b7 {{amount}}",
+			action_bill_updated: "Bill edited",
+			action_payment_recorded: "Paid {{amount}}",
+			action_payment_changed: "Payment {{from}} \u2192 {{to}}",
+			action_payment_cleared: "Payment cleared (was {{from}})",
+			action_bill_deleted: "Bill deleted",
+			field_name: "Name",
+			field_amount: "Amount",
+			field_start_date: "Start date",
 
 			//ANALYTIC
 			analytics_title: "Analytic",
@@ -257,6 +274,23 @@ const resources = {
 
 			//MENU
 			menu_title: "Menu",
+			//RECORD
+			record_title: "Rekod",
+			record_empty:
+				"Belum ada rekod. Perubahan pada bil anda akan dipaparkan di sini.",
+			record_failed: "Rekod tidak dapat dimuatkan. Cuba lagi.",
+			record_paid_total: "{{amount}} dibayar",
+			record_event_count: "{{count}} perubahan",
+			record_load_older: "Muat yang lama",
+			action_bill_created: "Bil dicipta \u00b7 {{amount}}",
+			action_bill_updated: "Bil diedit",
+			action_payment_recorded: "Dibayar {{amount}}",
+			action_payment_changed: "Bayaran {{from}} \u2192 {{to}}",
+			action_payment_cleared: "Bayaran dikosongkan (sebelum ini {{from}})",
+			action_bill_deleted: "Bil dipadam",
+			field_name: "Nama",
+			field_amount: "Jumlah",
+			field_start_date: "Tarikh mula",
 
 			//ANALYTIC
 			analytics_title: "Analitik",
