@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Home, Menu, Receipt } from "lucide-react";
+import { Home, Menu, Receipt, ScrollText } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { authClient, UnauthorizedError } from "./api/auth";
@@ -249,6 +249,12 @@ export default function App() {
 						label={t("bill_title")}
 						active={activeTab === ActiveTab.BILL}
 						onClick={() => setActiveTab(ActiveTab.BILL)}
+					/>
+					<NavButton
+						icon={ScrollText}
+						label={t("record_title")}
+						active={activeTab === ActiveTab.RECORD}
+						onClick={() => setActiveTab(ActiveTab.RECORD)}
 					/>
 					<NavButton
 						icon={Menu}

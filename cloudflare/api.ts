@@ -99,6 +99,57 @@ function decryptBill<T extends BillRow>(bill: T, keyHex: string) {
 	};
 }
 
+// ── Activity ──────────────────────────────────────────────────────────────────
+
+/**
+ * Which client wrote the row. Allowlisted rather than free-form: an unknown or
+ * absent header is recorded as 'web', so the column only ever holds two values
+ * and a caller cannot write arbitrary text into the history.
+ */
+function clientOf(c: { req: { header(name: string): string | undefined } }) {
+	return c.req.header("x-client") === "ios" ? "ios" : "web";
+}
+
+interface ActivityRow {
+	bill_name: string;
+	changes: {
+		before?: Record<string, unknown>;
+		after?: Record<string, unknown>;
+	} | null;
+	[key: string]: unknown;
+}
+
+/**
+ * Activity rows carry ciphertext in two places: the bill_name snapshot, and the
+ * name/notes fields inside `changes`. Both are decrypted here so the client never
+ * sees an encrypted value.
+ */
+function decryptActivity<T extends ActivityRow>(row: T, keyHex: string) {
+	const decryptSnapshot = (snapshot?: Record<string, unknown>) => {
+		if (!snapshot) return snapshot;
+		return {
+			...snapshot,
+			...(typeof snapshot.name === "string"
+				? { name: decrypt(snapshot.name, keyHex) }
+				: {}),
+			...(typeof snapshot.notes === "string"
+				? { notes: decrypt(snapshot.notes, keyHex) }
+				: {}),
+		};
+	};
+
+	return {
+		...row,
+		bill_name: decrypt(row.bill_name, keyHex),
+		changes: row.changes
+			? {
+					before: decryptSnapshot(row.changes.before),
+					after: decryptSnapshot(row.changes.after),
+				}
+			: null,
+	};
+}
+
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
 app.use("/api/*", async (c, next) => {
@@ -255,19 +306,31 @@ app.post("/api/bills", async (c) => {
 
 	try {
 		const sql = neon(c.env.DATABASE_URL);
+		const userId = c.get("userId");
+
+		// One statement, so the bill and its record are atomic: the activity CTE
+		// reads the insert's own RETURNING, and if either half fails nothing lands.
 		const [bill] = await sql`
-      INSERT INTO bills (user_id, name, amount, due_day, start_date, duration_months, notes, category)
-      VALUES (
-        ${c.get("userId")},
-        ${encrypt(name, c.env.ENCRYPTION_KEY)},
-        ${amount},
-        ${due_day},
-        ${start_date},
-        ${duration_months ?? null},
-        ${notes ? encrypt(notes, c.env.ENCRYPTION_KEY) : null},
-        ${category}
+      WITH ins AS (
+        INSERT INTO bills (user_id, name, amount, due_day, start_date, duration_months, notes, category)
+        VALUES (
+          ${userId},
+          ${encrypt(name, c.env.ENCRYPTION_KEY)},
+          ${amount},
+          ${due_day},
+          ${start_date},
+          ${duration_months ?? null},
+          ${notes ? encrypt(notes, c.env.ENCRYPTION_KEY) : null},
+          ${category}
+        )
+        RETURNING id, name, amount::text, due_day, start_date, duration_months, notes, category
+      ), log AS (
+        INSERT INTO bill_activity (user_id, bill_id, bill_name, action, amount, client)
+        SELECT ${userId}, id, name, 'bill_created', amount::numeric, ${clientOf(c)}
+        FROM ins
+        RETURNING id
       )
-      RETURNING id, name, amount::text, due_day, start_date, duration_months, notes, category
+      SELECT * FROM ins
     `;
 
 		return c.json(decryptBill(bill as BillRow, c.env.ENCRYPTION_KEY), 201);
@@ -324,17 +387,40 @@ app.patch("/api/bills/:id", async (c) => {
 	// have already started.
 	try {
 		const sql = neon(c.env.DATABASE_URL);
+		const userId = c.get("userId");
+
+		// old reads the pre-edit row in the same snapshot as upd, so the recorded
+		// before/after pair is consistent. It is deliberately NOT `FOR UPDATE`:
+		// LockRows skips rows that the same command has already updated, so a
+		// locking read here matches nothing and the log insert would silently
+		// write zero rows. upd itself takes the row lock, and one statement is
+		// one transaction, so no interleaving is possible either way.
 		const [bill] = await sql`
-      UPDATE bills SET
-        name = ${encrypt(name, c.env.ENCRYPTION_KEY)},
-        amount = ${amount},
-        due_day = ${dueDayNumber},
-        start_date = ${start_date},
-        duration_months = ${duration_months ?? null},
-        notes = ${notes ? encrypt(notes, c.env.ENCRYPTION_KEY) : null},
-        category = ${category}
-      WHERE id = ${id} AND user_id = ${c.get("userId")} AND is_active = true
-      RETURNING id, name, amount::text, due_day, start_date, duration_months, notes, category
+      WITH old AS (
+        SELECT name, amount::text, due_day, start_date, duration_months, notes, category
+        FROM bills
+        WHERE id = ${id} AND user_id = ${userId} AND is_active = true
+      ), upd AS (
+        UPDATE bills SET
+          name = ${encrypt(name, c.env.ENCRYPTION_KEY)},
+          amount = ${amount},
+          due_day = ${dueDayNumber},
+          start_date = ${start_date},
+          duration_months = ${duration_months ?? null},
+          notes = ${notes ? encrypt(notes, c.env.ENCRYPTION_KEY) : null},
+          category = ${category}
+        WHERE id = ${id} AND user_id = ${userId} AND is_active = true
+        RETURNING id, name, amount::text, due_day, start_date, duration_months, notes, category
+      ), log AS (
+        INSERT INTO bill_activity (user_id, bill_id, bill_name, action, changes, client)
+        SELECT
+          ${userId}, u.id, u.name, 'bill_updated',
+          jsonb_build_object('before', to_jsonb(o), 'after', to_jsonb(u)),
+          ${clientOf(c)}
+        FROM upd u CROSS JOIN old o
+        RETURNING id
+      )
+      SELECT * FROM upd
     `;
 
 		if (!bill) return c.json({ error: "Bill not found" }, 404);
@@ -349,10 +435,23 @@ app.delete("/api/bills/:id", async (c) => {
 	const id = c.req.param("id");
 	try {
 		const sql = neon(c.env.DATABASE_URL);
+		const userId = c.get("userId");
+
+		// Deletion is a soft delete, so the bills row survives and bill_activity
+		// keeps a valid reference. The record is written in the same statement as
+		// the is_active flip.
 		const result = await sql`
-      UPDATE bills SET is_active = false
-      WHERE id = ${id} AND user_id = ${c.get("userId")}
-      RETURNING id
+      WITH upd AS (
+        UPDATE bills SET is_active = false
+        WHERE id = ${id} AND user_id = ${userId} AND is_active = true
+        RETURNING id, name, category, amount
+      ), log AS (
+        INSERT INTO bill_activity (user_id, bill_id, bill_name, action, client)
+        SELECT ${userId}, id, name, 'bill_deleted', ${clientOf(c)}
+        FROM upd
+        RETURNING id
+      )
+      SELECT id FROM upd
     `;
 		if (result.length === 0) return c.json({ error: "Bill not found" }, 404);
 		return c.json({ success: true });
@@ -378,16 +477,105 @@ app.post("/api/bills/:id/payment", async (c) => {
 		if (!bill) return c.json({ error: "Bill not found" }, 404);
 
 		const [payment] = await sql`
-      INSERT INTO payments (bill_id, user_id, month_year, amount, paid_at)
-      VALUES (${id}, ${c.get("userId")}, ${month_year}, ${amount}, now())
-      ON CONFLICT (bill_id, month_year)
-      DO UPDATE SET amount = EXCLUDED.amount, paid_at = now()
-      RETURNING id, amount::float, is_paid
+      WITH prev AS (
+        SELECT (
+          SELECT amount FROM payments WHERE bill_id = ${id} AND month_year = ${month_year}
+        ) AS amount
+      ), up AS (
+        INSERT INTO payments (bill_id, user_id, month_year, amount, paid_at)
+        VALUES (${id}, ${c.get("userId")}, ${month_year}, ${amount}, now())
+        ON CONFLICT (bill_id, month_year)
+        DO UPDATE SET amount = EXCLUDED.amount, paid_at = now()
+        RETURNING id, amount::float, is_paid, bill_id
+      ), log AS (
+        INSERT INTO bill_activity (user_id, bill_id, bill_name, action, month_year, amount, prev_amount, client)
+        SELECT
+          ${c.get("userId")}, up.bill_id, b.name,
+          CASE
+            WHEN prev.amount IS NULL THEN 'payment_recorded'
+            WHEN ${amount}::numeric = 0 THEN 'payment_cleared'
+            ELSE 'payment_changed'
+          END,
+          ${month_year}, up.amount, COALESCE(prev.amount, 0), ${clientOf(c)}
+        FROM up, prev, bills b
+        WHERE b.id = up.bill_id
+        RETURNING id
+      )
+      SELECT up.id, up.amount, up.is_paid FROM up
     `;
 		return c.json(payment);
 	} catch (err) {
 		console.error("payment error:", err);
 		return c.json({ error: "Failed to update payment" }, 500);
+	}
+});
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+
+/**
+ * Activity for the newest N months that actually contain activity, returned whole.
+ *
+ * Pagination is by month rather than by row on purpose: if rows were paged
+ * directly, the last month in a page would be half-loaded and its totals wrong.
+ * Fetching every row of N complete months lets the client group and total them
+ * without a second query. `before` pages backwards by month.
+ */
+app.get("/api/activity", async (c) => {
+	const userId = c.get("userId");
+	const monthsParam = Number.parseInt(c.req.query("months") ?? "6", 10);
+	const months = Number.isNaN(monthsParam)
+		? 6
+		: Math.min(Math.max(monthsParam, 1), 24);
+	const before = c.req.query("before") ?? null;
+	const billIdParam = c.req.query("bill_id");
+	const billId = billIdParam ? Number.parseInt(billIdParam, 10) : null;
+
+	if (before !== null && !/^\d{4}-\d{2}$/.test(before)) {
+		return c.json({ error: "Invalid before format. Use YYYY-MM" }, 400);
+	}
+	if (billId !== null && Number.isNaN(billId)) {
+		return c.json({ error: "Invalid bill_id" }, 400);
+	}
+
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const rows = await sql`
+      WITH months AS (
+        SELECT to_char(created_at, 'YYYY-MM') AS month
+        FROM bill_activity
+        WHERE user_id = ${userId}
+          AND (${before}::text IS NULL OR to_char(created_at, 'YYYY-MM') < ${before})
+        GROUP BY 1
+        ORDER BY 1 DESC
+        LIMIT ${months}
+      )
+      SELECT
+        a.id,
+        a.bill_id,
+        a.bill_name,
+        a.action,
+        a.month_year,
+        a.amount::float,
+        a.prev_amount::float,
+        a.changes,
+        a.client,
+        a.created_at,
+        to_char(a.created_at, 'YYYY-MM') AS month
+      FROM bill_activity a
+      JOIN months m ON m.month = to_char(a.created_at, 'YYYY-MM')
+      WHERE a.user_id = ${userId}
+        AND (${billId}::int IS NULL OR a.bill_id = ${billId}::int)
+      ORDER BY a.created_at DESC, a.id DESC
+    `;
+
+		return c.json(
+			rows.map((row) =>
+				decryptActivity(row as unknown as ActivityRow, c.env.ENCRYPTION_KEY),
+			),
+		);
+	} catch (err) {
+		console.error("fetch activity error:", err);
+		return c.json({ error: "Failed to fetch activity" }, 500);
 	}
 });
 
