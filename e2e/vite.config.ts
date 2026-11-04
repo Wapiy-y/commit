@@ -10,6 +10,11 @@ import { defineConfig } from "vite";
  */
 export default defineConfig({
 	root: resolve(__dirname),
+	// The app's vite config injects this; without it any module importing
+	// @/lib/build throws a ReferenceError and nothing renders.
+	define: {
+		__BUILD_ID__: JSON.stringify("e2e"),
+	},
 	plugins: [react(), tailwindcss()],
 	resolve: {
 		alias: [

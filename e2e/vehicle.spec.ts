@@ -177,3 +177,74 @@ test("edits a vehicle's identity", async ({ page }) => {
 
 	await expect(page.getByText("BKM 9999")).toBeVisible();
 });
+
+test.describe("date inputs stay inside their container", () => {
+	// iOS gives date inputs an intrinsic width that ignores width:100%, so they
+	// overflow the modal. Chromium does not reproduce that, so these assertions
+	// cover what can be checked here: the reset rule is applied, and no sheet
+	// overflows horizontally at the narrowest phone width.
+	test.use({ viewport: { width: 320, height: 640 } });
+
+	const sheetOverflows = async (page: import("@playwright/test").Page) =>
+		page
+			.locator("form")
+			.last()
+			.evaluate((el) => el.scrollWidth - el.clientWidth);
+
+	test("the reset rule applies to date inputs", async ({ page }) => {
+		await page.goto("/?view=bill");
+		const style = await page
+			.locator('input[type="date"]')
+			.first()
+			.evaluate((el) => {
+				const computed = getComputedStyle(el);
+				return {
+					appearance: computed.appearance || computed.webkitAppearance,
+					minWidth: computed.minWidth,
+					width: computed.width,
+					maxWidth: computed.maxWidth,
+				};
+			});
+		expect(style.appearance).toBe("none");
+		expect(style.minWidth).toBe("0px");
+		expect(style.maxWidth).toBe("100%");
+	});
+
+	test("add bill sheet does not overflow at 320px", async ({ page }) => {
+		await page.goto("/?view=bill");
+		expect(await sheetOverflows(page)).toBeLessThanOrEqual(1);
+	});
+
+	test("edit bill sheet does not overflow at 320px", async ({ page }) => {
+		await page.goto("/?view=edit-bill");
+		expect(await sheetOverflows(page)).toBeLessThanOrEqual(1);
+	});
+
+	test("insurance sheet does not overflow at 320px", async ({ page }) => {
+		await page.goto("/");
+		await page.getByText("VGD 8899").click();
+		await page.getByRole("button", { name: "Renew insurance" }).click();
+		expect(await sheetOverflows(page)).toBeLessThanOrEqual(1);
+	});
+
+	test("service sheet does not overflow at 320px", async ({ page }) => {
+		await page.goto("/");
+		await page.getByText("VGD 8899").click();
+		await page.getByRole("button", { name: "Log service" }).click();
+		expect(await sheetOverflows(page)).toBeLessThanOrEqual(1);
+	});
+});
+
+test("Vehicle is reachable from the Menu, not the bottom nav", async ({
+	page,
+}) => {
+	// The five-tab nav was cramped on a phone; Vehicle moved into the Menu, so
+	// this asserts the row is there and actually navigates rather than being a
+	// decorative stub like Analytics.
+	await page.goto("/?view=menu");
+	await expect(page.getByTestId("target")).toHaveText("target:none");
+
+	await page.getByRole("button", { name: /Vehicle/ }).click();
+	await expect(page.getByTestId("target")).toHaveText("target:vehicle");
+	await expect(page.getByText("Insurance and service")).toBeVisible();
+});

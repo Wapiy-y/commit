@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Car, Home, Menu, Receipt, ScrollText } from "lucide-react";
+import { Home, Menu, Receipt, ScrollText } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { authClient, UnauthorizedError } from "./api/auth";
@@ -251,12 +251,6 @@ export default function App() {
 						onClick={() => setActiveTab(ActiveTab.BILL)}
 					/>
 					<NavButton
-						icon={Car}
-						label={t("vehicle_title")}
-						active={activeTab === ActiveTab.VEHICLE}
-						onClick={() => setActiveTab(ActiveTab.VEHICLE)}
-					/>
-					<NavButton
 						icon={ScrollText}
 						label={t("record_title")}
 						active={activeTab === ActiveTab.RECORD}
@@ -265,7 +259,13 @@ export default function App() {
 					<NavButton
 						icon={Menu}
 						label={t("menu_title")}
-						active={activeTab === ActiveTab.MENU}
+						// Vehicle and Analytic are opened from the Menu, so the Menu tab
+						// stays lit while you are inside one of them.
+						active={
+							activeTab === ActiveTab.MENU ||
+							activeTab === ActiveTab.VEHICLE ||
+							activeTab === ActiveTab.ANALYTIC
+						}
 						onClick={() => setActiveTab(ActiveTab.MENU)}
 					/>
 				</div>
