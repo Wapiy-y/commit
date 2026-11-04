@@ -11,7 +11,7 @@ interface FormFieldProps {
 
 export function FormField({ label, htmlFor, children, hint }: FormFieldProps) {
 	return (
-		<div>
+		<div className="min-w-0">
 			<label
 				htmlFor={htmlFor}
 				className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1"

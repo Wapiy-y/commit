@@ -81,7 +81,7 @@ export function ServiceFormModal({
 					/>
 				)}
 
-				<div className="grid grid-cols-2 gap-3">
+				<div className="space-y-4">
 					<FormField label={t("service_date")} htmlFor="service-date">
 						<input
 							id="service-date"

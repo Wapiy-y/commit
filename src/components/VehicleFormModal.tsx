@@ -110,7 +110,7 @@ export function VehicleFormModal({
 					</select>
 				</FormField>
 
-				<div className="grid grid-cols-2 gap-3">
+				<div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
 					<FormField label={t("vehicle_brand")} htmlFor="vehicle-brand">
 						<input
 							required
@@ -133,7 +133,7 @@ export function VehicleFormModal({
 					</FormField>
 				</div>
 
-				<div className="grid grid-cols-2 gap-3">
+				<div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
 					<FormField
 						htmlFor="vehicle-mileage"
 						label={t("vehicle_mileage")}

@@ -70,6 +70,43 @@ test("accepts a service interval that is not a round thousand", async ({
 	await expect(page.getByText(/every 1,700 km/)).toBeVisible();
 });
 
+test("stacks the insurance date fields instead of overlapping them", async ({
+	page,
+}) => {
+	await page.getByText("VGD 8899").click();
+	await page.getByRole("button", { name: "Renew insurance" }).click();
+
+	// iOS will not shrink <input type="date"> below its intrinsic width, so a
+	// two-column grid made these overlap on a phone. Stacked means a clearly
+	// different y, the same x, and each one full width of the sheet.
+	const start = await page.getByLabel("Cover starts").boundingBox();
+	const expiry = await page.getByLabel("Cover ends").boundingBox();
+	expect(start).not.toBeNull();
+	expect(expiry).not.toBeNull();
+	if (!start || !expiry) return;
+
+	expect(expiry.y).toBeGreaterThan(start.y + start.height - 1);
+	expect(Math.abs(expiry.x - start.x)).toBeLessThan(2);
+	expect(start.width).toBeGreaterThan(300);
+});
+
+test("stacks the service date and odometer fields", async ({ page }) => {
+	await page.getByText("VGD 8899").click();
+	await page.getByRole("button", { name: "Log service" }).click();
+
+	const date = await page.getByLabel("Service date").boundingBox();
+	const mileage = await page
+		.getByLabel("Odometer at service (km)")
+		.boundingBox();
+	expect(date).not.toBeNull();
+	expect(mileage).not.toBeNull();
+	if (!date || !mileage) return;
+
+	expect(mileage.y).toBeGreaterThan(date.y + date.height - 1);
+	expect(Math.abs(mileage.x - date.x)).toBeLessThan(2);
+	expect(date.width).toBeGreaterThan(300);
+});
+
 test("refuses an empty form without closing", async ({ page }) => {
 	await page.getByRole("button", { name: "Add vehicle" }).click();
 	// Plate/brand/model are required, so the browser blocks submission and the
