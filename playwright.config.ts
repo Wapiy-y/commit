@@ -22,6 +22,10 @@ export default defineConfig({
 		command: "npm run e2e:serve",
 		url: "http://127.0.0.1:4173",
 		reuseExistingServer: !process.env.CI,
-		timeout: 120_000,
+		timeout: 180_000,
+		// Surface the server's own output when it fails to start; a silent
+		// webServer timeout tells you nothing about why it never bound.
+		stdout: "pipe",
+		stderr: "pipe",
 	},
 });

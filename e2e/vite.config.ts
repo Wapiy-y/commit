@@ -20,5 +20,8 @@ export default defineConfig({
 			{ find: "@", replacement: resolve(__dirname, "../src") },
 		],
 	},
-	server: { port: 4173, strictPort: true },
+	// Pinned to IPv4 on purpose: Vite's default "localhost" binds whatever it
+	// resolves to, and Playwright's webServer probes 127.0.0.1 — on a runner where
+	// localhost resolves to ::1 first, the probe times out with no error output.
+	server: { host: "127.0.0.1", port: 4173, strictPort: true },
 });
