@@ -1,5 +1,6 @@
 import type { i18n, TFunction } from "i18next";
 import { ChevronRight, Globe, LogOut, Moon, PieChart, Sun } from "lucide-react";
+import { BUILD_ID } from "@/lib/build";
 import { ActiveTab, type User } from "@/type";
 
 interface MenuProps {
@@ -100,8 +101,10 @@ export default function Menu({
 			</button>
 
 			<div className="mt-8 mb-4 text-center">
+				{/* The build id makes "am I on the new version?" answerable at a glance
+				    instead of by deleting and reinstalling the app. */}
 				<p className="text-xs text-zinc-300 dark:text-zinc-600 font-mono">
-					v3.0
+					v3.0 · build {BUILD_ID.slice(-6)}
 				</p>
 			</div>
 		</div>
