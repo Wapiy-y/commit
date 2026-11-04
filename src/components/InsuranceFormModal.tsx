@@ -113,7 +113,7 @@ export function InsuranceFormModal({
 					/>
 				</FormField>
 
-				<div className="grid grid-cols-2 gap-3">
+				<div className="space-y-4">
 					<FormField label={t("insurance_policy")} htmlFor="insurance-policy">
 						<input
 							required
@@ -150,7 +150,7 @@ export function InsuranceFormModal({
 					</FormField>
 				</div>
 
-				<div className="grid grid-cols-2 gap-3">
+				<div className="space-y-4">
 					<FormField label={t("insurance_start")} htmlFor="insurance-start">
 						<input
 							id="insurance-start"
