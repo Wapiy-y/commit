@@ -3,14 +3,19 @@ import { cn } from "@/lib/utils";
 
 interface FormFieldProps {
 	label: string;
+	/** Id of the control this labels — without it the label is decorative only. */
+	htmlFor: string;
 	children: React.ReactNode;
 	hint?: string;
 }
 
-export function FormField({ label, children, hint }: FormFieldProps) {
+export function FormField({ label, htmlFor, children, hint }: FormFieldProps) {
 	return (
 		<div>
-			<label className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
+			<label
+				htmlFor={htmlFor}
+				className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1"
+			>
 				{label}
 			</label>
 			{children}

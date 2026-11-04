@@ -1,0 +1,36 @@
+name: E2E
+
+# Drives the vehicle flows in a real browser against e2e/mock-vehicles.ts.
+# The harness renders the real components; only the network layer is replaced.
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  vehicle:
+    name: Vehicle flows
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - run: npm ci
+
+      # Only Chromium: the suite is a phone-sized viewport in one browser, and
+      # downloading WebKit and Firefox as well would triple the job time.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

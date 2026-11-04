@@ -8,6 +8,12 @@ interface ModalShellProps {
 	onClose: () => void;
 	children: React.ReactNode;
 	footer: React.ReactNode;
+	/**
+	 * Submitting is handled by the shell so the footer lives *inside* the form.
+	 * Rendering the submit button beside the form instead of within it is easy to
+	 * do by accident, and fails silently: the button submits nothing at all.
+	 */
+	onSubmit?: (event: React.FormEvent) => void;
 }
 
 /**
@@ -20,6 +26,7 @@ export function ModalShell({
 	onClose,
 	children,
 	footer,
+	onSubmit,
 }: ModalShellProps) {
 	const modal = (
 		<div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -49,10 +56,16 @@ export function ModalShell({
 						<X size={16} />
 					</button>
 				</div>
-				<div className="overflow-y-auto flex-1 px-5 py-4">{children}</div>
-				<div className="px-5 py-4 border-t border-zinc-100 dark:border-zinc-800">
-					{footer}
-				</div>
+				<form
+					onSubmit={onSubmit}
+					className="flex flex-col flex-1 min-h-0"
+					noValidate={false}
+				>
+					<div className="overflow-y-auto flex-1 px-5 py-4">{children}</div>
+					<div className="px-5 py-4 border-t border-zinc-100 dark:border-zinc-800">
+						{footer}
+					</div>
+				</form>
 			</div>
 		</div>
 	);
