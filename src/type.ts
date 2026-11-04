@@ -78,9 +78,75 @@ export interface User {
 	name: string;
 }
 
+export type VehicleType = "car" | "motorcycle";
+export type CoverageType = "comprehensive" | "third_party";
+
+export interface VehicleInsurance {
+	id: number;
+	provider: string;
+	policy_number: string;
+	coverage_type: CoverageType;
+	start_date: string;
+	expiry_date: string;
+	premium_paid: number;
+	superseded_at?: string | null;
+	created_at?: string;
+}
+
+export interface Vehicle {
+	id: number;
+	plate_number: string;
+	vehicle_type: VehicleType;
+	brand: string;
+	model: string;
+	current_mileage: number;
+	mileage_updated_at: string | null;
+	service_interval: number;
+	next_service_mileage: number | null;
+	created_at: string;
+	insurance: VehicleInsurance | null;
+}
+
+export interface NewVehicle {
+	plate_number: string;
+	vehicle_type: VehicleType;
+	brand: string;
+	model: string;
+	current_mileage: string;
+	service_interval: string;
+}
+
+export interface VehicleService {
+	id: number;
+	serviced_on: string;
+	mileage_at_service: number;
+	workshop: string | null;
+	cost: number | null;
+	notes: string | null;
+	created_at: string;
+}
+
+export interface NewInsurance {
+	provider: string;
+	policy_number: string;
+	coverage_type: CoverageType;
+	start_date: string;
+	expiry_date: string;
+	premium_paid: string;
+}
+
+export interface NewService {
+	serviced_on: string;
+	mileage_at_service: string;
+	workshop: string;
+	cost: string;
+	notes: string;
+}
+
 export enum ActiveTab {
 	HOME = "home",
 	BILL = "bill",
+	VEHICLE = "vehicle",
 	RECORD = "record",
 	MENU = "menu",
 	ANALYTIC = "analytic",

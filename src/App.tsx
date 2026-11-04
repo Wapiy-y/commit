@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Home, Menu, Receipt, ScrollText } from "lucide-react";
+import { Car, Home, Menu, Receipt, ScrollText } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { authClient, UnauthorizedError } from "./api/auth";
@@ -249,6 +249,12 @@ export default function App() {
 						label={t("bill_title")}
 						active={activeTab === ActiveTab.BILL}
 						onClick={() => setActiveTab(ActiveTab.BILL)}
+					/>
+					<NavButton
+						icon={Car}
+						label={t("vehicle_title")}
+						active={activeTab === ActiveTab.VEHICLE}
+						onClick={() => setActiveTab(ActiveTab.VEHICLE)}
 					/>
 					<NavButton
 						icon={ScrollText}

@@ -5,6 +5,7 @@ import Bills from "./Bills";
 import HomePage from "./Home";
 import Menu from "./Menu";
 import Record from "./Record";
+import Vehicle from "./Vehicle";
 
 interface ContentProps {
 	activeTab: ActiveTab;
@@ -73,6 +74,7 @@ export const Content = ({
 					t={t}
 				/>
 			)}
+			{activeTab === ActiveTab.VEHICLE && <Vehicle t={t} />}
 			{activeTab === ActiveTab.RECORD && (
 				<Record t={t} language={i18n.language} />
 			)}

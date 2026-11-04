@@ -579,4 +579,399 @@ app.get("/api/activity", async (c) => {
 	}
 });
 
+// ── Vehicles ──────────────────────────────────────────────────────────────────
+//
+// Status (insurance expiry, service due) is derived on the client from these
+// fields rather than stored: a stored status would go stale the moment the date
+// changes, and this app has no scheduled job to refresh it.
+
+const VEHICLE_TYPES = ["car", "motorcycle"];
+const COVERAGE_TYPES = ["comprehensive", "third_party"];
+
+app.get("/api/vehicles", async (c) => {
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const rows = await sql`
+      SELECT
+        v.id, v.plate_number, v.vehicle_type, v.brand, v.model,
+        v.current_mileage, v.mileage_updated_at, v.service_interval,
+        v.next_service_mileage, v.created_at,
+        i.id AS insurance_id, i.provider, i.policy_number, i.coverage_type,
+        i.start_date, i.expiry_date, i.premium_paid::float
+      FROM vehicles v
+      LEFT JOIN vehicle_insurance i
+        ON i.vehicle_id = v.id AND i.superseded_at IS NULL
+      WHERE v.user_id = ${c.get("userId")} AND v.is_active = true
+      ORDER BY v.created_at ASC
+    `;
+
+		return c.json(
+			rows.map((row) => {
+				const { insurance_id, provider, ...rest } = row as Record<
+					string,
+					unknown
+				>;
+				return {
+					...rest,
+					insurance: insurance_id
+						? {
+								id: insurance_id,
+								provider,
+								policy_number: (row as Record<string, unknown>).policy_number,
+								coverage_type: (row as Record<string, unknown>).coverage_type,
+								start_date: (row as Record<string, unknown>).start_date,
+								expiry_date: (row as Record<string, unknown>).expiry_date,
+								premium_paid: (row as Record<string, unknown>).premium_paid,
+							}
+						: null,
+				};
+			}),
+		);
+	} catch (err) {
+		console.error("fetch vehicles error:", err);
+		return c.json({ error: "Failed to fetch vehicles" }, 500);
+	}
+});
+
+app.post("/api/vehicles", async (c) => {
+	const body = await c.req.json();
+	const {
+		plate_number,
+		vehicle_type,
+		brand,
+		model,
+		current_mileage,
+		service_interval,
+	} = body ?? {};
+
+	if (!plate_number || !vehicle_type || !brand || !model) {
+		return c.json({ error: "Missing required fields" }, 400);
+	}
+	if (!VEHICLE_TYPES.includes(vehicle_type)) {
+		return c.json({ error: "Invalid vehicle_type" }, 400);
+	}
+
+	const mileage = Number(current_mileage ?? 0);
+	const interval = Number(service_interval ?? 10000);
+	if (!Number.isInteger(mileage) || mileage < 0) {
+		return c.json({ error: "current_mileage must be a whole number" }, 400);
+	}
+	if (!Number.isInteger(interval) || interval <= 0) {
+		return c.json(
+			{ error: "service_interval must be a positive whole number" },
+			400,
+		);
+	}
+
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const [vehicle] = await sql`
+      INSERT INTO vehicles (
+        user_id, plate_number, vehicle_type, brand, model,
+        current_mileage, mileage_updated_at, service_interval, next_service_mileage
+      )
+      VALUES (
+        ${c.get("userId")}, ${plate_number.trim()}, ${vehicle_type},
+        ${brand.trim()}, ${model.trim()},
+        ${mileage}, ${mileage > 0 ? new Date().toISOString().slice(0, 10) : null},
+        ${interval}, ${mileage + interval}
+      )
+      RETURNING *
+    `;
+		return c.json(vehicle, 201);
+	} catch (err) {
+		console.error("add vehicle error:", err);
+		return c.json({ error: "Failed to create vehicle" }, 500);
+	}
+});
+
+app.patch("/api/vehicles/:id", async (c) => {
+	const id = c.req.param("id");
+	const body = await c.req.json();
+	const { plate_number, vehicle_type, brand, model, service_interval } =
+		body ?? {};
+
+	if (!plate_number || !vehicle_type || !brand || !model) {
+		return c.json({ error: "Missing required fields" }, 400);
+	}
+	if (!VEHICLE_TYPES.includes(vehicle_type)) {
+		return c.json({ error: "Invalid vehicle_type" }, 400);
+	}
+	const interval = Number(service_interval ?? 10000);
+	if (!Number.isInteger(interval) || interval <= 0) {
+		return c.json(
+			{ error: "service_interval must be a positive whole number" },
+			400,
+		);
+	}
+
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const [vehicle] = await sql`
+      UPDATE vehicles SET
+        plate_number = ${plate_number.trim()},
+        vehicle_type = ${vehicle_type},
+        brand = ${brand.trim()},
+        model = ${model.trim()},
+        -- The target is measured from the last service (or from the current
+        -- reading if the vehicle has never been serviced), so shortening the
+        -- interval brings the next service forward instead of silently keeping
+        -- a target that no longer matches.
+        next_service_mileage = COALESCE(
+          (SELECT max(mileage_at_service) FROM vehicle_service WHERE vehicle_id = ${id}),
+          current_mileage
+        ) + ${interval},
+        service_interval = ${interval}
+      WHERE id = ${id} AND user_id = ${c.get("userId")} AND is_active = true
+      RETURNING *
+    `;
+		if (!vehicle) return c.json({ error: "Vehicle not found" }, 404);
+		return c.json(vehicle);
+	} catch (err) {
+		console.error("update vehicle error:", err);
+		return c.json({ error: "Failed to update vehicle" }, 500);
+	}
+});
+
+app.delete("/api/vehicles/:id", async (c) => {
+	const id = c.req.param("id");
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const rows = await sql`
+      UPDATE vehicles SET is_active = false
+      WHERE id = ${id} AND user_id = ${c.get("userId")} AND is_active = true
+      RETURNING id
+    `;
+		if (rows.length === 0) return c.json({ error: "Vehicle not found" }, 404);
+		return c.json({ success: true });
+	} catch (err) {
+		console.error("delete vehicle error:", err);
+		return c.json({ error: "Failed to delete vehicle" }, 500);
+	}
+});
+
+// Odometer-only update: no service event, just a newer reading. Rejects a lower
+// value because an odometer does not run backwards, and silently accepting one
+// would corrupt every "km until service" figure.
+app.patch("/api/vehicles/:id/mileage", async (c) => {
+	const id = c.req.param("id");
+	const { current_mileage, mileage_updated_at } = (await c.req.json()) ?? {};
+	const mileage = Number(current_mileage);
+
+	if (!Number.isInteger(mileage) || mileage < 0) {
+		return c.json({ error: "current_mileage must be a whole number" }, 400);
+	}
+
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const [vehicle] = await sql`
+      UPDATE vehicles SET
+        current_mileage = ${mileage},
+        mileage_updated_at = ${mileage_updated_at ?? new Date().toISOString().slice(0, 10)}
+      WHERE id = ${id} AND user_id = ${c.get("userId")} AND is_active = true
+        AND ${mileage} >= current_mileage
+      RETURNING *
+    `;
+		if (!vehicle) {
+			return c.json(
+				{ error: "Mileage cannot be lower than the current reading" },
+				400,
+			);
+		}
+		return c.json(vehicle);
+	} catch (err) {
+		console.error("update mileage error:", err);
+		return c.json({ error: "Failed to update mileage" }, 500);
+	}
+});
+
+app.get("/api/vehicles/:id/insurance", async (c) => {
+	const id = c.req.param("id");
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const rows = await sql`
+      SELECT id, provider, policy_number, coverage_type, start_date, expiry_date,
+             premium_paid::float, superseded_at, created_at
+      FROM vehicle_insurance
+      WHERE vehicle_id = ${id} AND user_id = ${c.get("userId")}
+      ORDER BY start_date DESC, id DESC
+    `;
+		return c.json(rows);
+	} catch (err) {
+		console.error("fetch insurance error:", err);
+		return c.json({ error: "Failed to fetch insurance history" }, 500);
+	}
+});
+
+// Renewal. One statement: stamp the active policy superseded, insert the new one.
+// The partial unique index means a concurrent second renewal fails loudly rather
+// than leaving two active policies.
+app.post("/api/vehicles/:id/insurance", async (c) => {
+	const id = c.req.param("id");
+	const body = await c.req.json();
+	const {
+		provider,
+		policy_number,
+		coverage_type,
+		start_date,
+		expiry_date,
+		premium_paid,
+	} = body ?? {};
+
+	if (
+		!provider ||
+		!policy_number ||
+		!coverage_type ||
+		!start_date ||
+		!expiry_date
+	) {
+		return c.json({ error: "Missing required fields" }, 400);
+	}
+	if (!COVERAGE_TYPES.includes(coverage_type)) {
+		return c.json({ error: "Invalid coverage_type" }, 400);
+	}
+	if (
+		!/^\d{4}-\d{2}-\d{2}$/.test(start_date) ||
+		!/^\d{4}-\d{2}-\d{2}$/.test(expiry_date)
+	) {
+		return c.json({ error: "Dates must be YYYY-MM-DD" }, 400);
+	}
+	if (expiry_date <= start_date) {
+		return c.json({ error: "expiry_date must be after start_date" }, 400);
+	}
+	const premium = Number(premium_paid ?? 0);
+	if (Number.isNaN(premium) || premium < 0) {
+		return c.json({ error: "premium_paid must be zero or more" }, 400);
+	}
+
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const [vehicle] =
+			await sql`SELECT id FROM vehicles WHERE id = ${id} AND user_id = ${c.get("userId")} AND is_active = true`;
+		if (!vehicle) return c.json({ error: "Vehicle not found" }, 404);
+
+		// Two statements in one transaction, not one statement with CTEs: the
+		// partial unique index only allows one active policy, and a sibling CTE's
+		// UPDATE is not visible to the INSERT's uniqueness check in the same
+		// command — Postgres rejects that with a duplicate-key error. Sequential
+		// statements inside a transaction see each other, so retire-then-insert
+		// is the only correct shape here.
+		const [, inserted] = await sql.transaction([
+			sql`
+        UPDATE vehicle_insurance SET superseded_at = now()
+        WHERE vehicle_id = ${id} AND user_id = ${c.get("userId")} AND superseded_at IS NULL
+      `,
+			sql`
+        INSERT INTO vehicle_insurance (
+          user_id, vehicle_id, provider, policy_number, coverage_type,
+          start_date, expiry_date, premium_paid
+        )
+        VALUES (
+          ${c.get("userId")}, ${id}, ${provider.trim()}, ${policy_number.trim()},
+          ${coverage_type}, ${start_date}, ${expiry_date}, ${premium}
+        )
+        RETURNING id, provider, policy_number, coverage_type, start_date,
+                  expiry_date, premium_paid::float, created_at
+      `,
+		]);
+		const policy = (inserted as Record<string, unknown>[])[0];
+		return c.json(policy, 201);
+	} catch (err) {
+		console.error("renew insurance error:", err);
+		return c.json({ error: "Failed to renew insurance" }, 500);
+	}
+});
+
+app.get("/api/vehicles/:id/service", async (c) => {
+	const id = c.req.param("id");
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const rows = await sql`
+      SELECT id, serviced_on, mileage_at_service, workshop, cost::float, notes, created_at
+      FROM vehicle_service
+      WHERE vehicle_id = ${id} AND user_id = ${c.get("userId")}
+      ORDER BY serviced_on DESC, id DESC
+    `;
+		return c.json(rows);
+	} catch (err) {
+		console.error("fetch service error:", err);
+		return c.json({ error: "Failed to fetch service history" }, 500);
+	}
+});
+
+// Logging a service does three things at once: record the event, move the
+// odometer, and recompute the next milestone. All in one statement, because a
+// half-applied version leaves the odometer and the log permanently disagreeing.
+app.post("/api/vehicles/:id/service", async (c) => {
+	const id = c.req.param("id");
+	const body = await c.req.json();
+	const { serviced_on, mileage_at_service, workshop, cost, notes } = body ?? {};
+
+	if (!serviced_on || mileage_at_service === undefined) {
+		return c.json(
+			{ error: "serviced_on and mileage_at_service are required" },
+			400,
+		);
+	}
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(serviced_on)) {
+		return c.json({ error: "serviced_on must be YYYY-MM-DD" }, 400);
+	}
+	const mileage = Number(mileage_at_service);
+	if (!Number.isInteger(mileage) || mileage < 0) {
+		return c.json({ error: "mileage_at_service must be a whole number" }, 400);
+	}
+	const costValue =
+		cost === undefined || cost === null || cost === "" ? null : Number(cost);
+	if (costValue !== null && (Number.isNaN(costValue) || costValue < 0)) {
+		return c.json({ error: "cost must be zero or more" }, 400);
+	}
+
+	try {
+		const sql = neon(c.env.DATABASE_URL);
+		const [updated] = await sql`
+      WITH ins AS (
+        -- The same odometer guard as the UPDATE below. A data-modifying CTE always
+        -- runs, even when its sibling matches no rows, so guarding only the UPDATE
+        -- would record the service while refusing to move the mileage.
+        INSERT INTO vehicle_service (
+          user_id, vehicle_id, serviced_on, mileage_at_service, workshop, cost, notes
+        )
+        SELECT ${c.get("userId")}, ${id}, ${serviced_on}, ${mileage},
+               ${workshop?.trim() || null}, ${costValue}, ${notes?.trim() || null}
+        WHERE EXISTS (
+          SELECT 1 FROM vehicles v
+          WHERE v.id = ${id} AND v.user_id = ${c.get("userId")} AND v.is_active = true
+            AND ${mileage} >= v.current_mileage
+        )
+        RETURNING id
+      ), upd AS (
+        UPDATE vehicles v SET
+          current_mileage = GREATEST(v.current_mileage, ${mileage}),
+          mileage_updated_at = GREATEST(
+            COALESCE(v.mileage_updated_at, ${serviced_on}::date), ${serviced_on}::date
+          ),
+          next_service_mileage = ${mileage} + v.service_interval
+        WHERE v.id = ${id} AND v.user_id = ${c.get("userId")} AND v.is_active = true
+          AND ${mileage} >= v.current_mileage
+        RETURNING v.id, v.current_mileage, v.next_service_mileage, v.service_interval
+      )
+      SELECT * FROM upd
+    `;
+
+		if (!updated) {
+			return c.json(
+				{
+					error:
+						"mileage_at_service cannot be lower than the vehicle's current mileage",
+				},
+				400,
+			);
+		}
+		return c.json(updated, 201);
+	} catch (err) {
+		console.error("log service error:", err);
+		return c.json({ error: "Failed to log service" }, 500);
+	}
+});
+
 export default app;
