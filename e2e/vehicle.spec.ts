@@ -234,3 +234,17 @@ test.describe("date inputs stay inside their container", () => {
 		expect(await sheetOverflows(page)).toBeLessThanOrEqual(1);
 	});
 });
+
+test("Vehicle is reachable from the Menu, not the bottom nav", async ({
+	page,
+}) => {
+	// The five-tab nav was cramped on a phone; Vehicle moved into the Menu, so
+	// this asserts the row is there and actually navigates rather than being a
+	// decorative stub like Analytics.
+	await page.goto("/?view=menu");
+	await expect(page.getByTestId("target")).toHaveText("target:none");
+
+	await page.getByRole("button", { name: /Vehicle/ }).click();
+	await expect(page.getByTestId("target")).toHaveText("target:vehicle");
+	await expect(page.getByText("Insurance and service")).toBeVisible();
+});

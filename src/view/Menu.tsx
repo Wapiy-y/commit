@@ -1,5 +1,13 @@
 import type { i18n, TFunction } from "i18next";
-import { ChevronRight, Globe, LogOut, Moon, PieChart, Sun } from "lucide-react";
+import {
+	Car,
+	ChevronRight,
+	Globe,
+	LogOut,
+	Moon,
+	PieChart,
+	Sun,
+} from "lucide-react";
 import { BUILD_ID } from "@/lib/build";
 import { ActiveTab, type User } from "@/type";
 
@@ -26,6 +34,26 @@ export default function Menu({
 }: MenuProps) {
 	return (
 		<div className="space-y-4 animate-in fade-in duration-300">
+			{/* Vehicles: moved out of the bottom nav, which keeps four tabs on a
+			    phone instead of five. */}
+			<button
+				onClick={() => setActiveTab(ActiveTab.VEHICLE)}
+				className="w-full flex items-center gap-4 p-4 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+			>
+				<div className="p-2 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg">
+					<Car size={24} />
+				</div>
+				<div className="flex-1 text-left">
+					<h3 className="font-medium text-zinc-900 dark:text-zinc-50">
+						{t("vehicle_title")}
+					</h3>
+					<p className="text-xs text-zinc-500 dark:text-zinc-400">
+						{t("vehicle_menu_subtitle")}
+					</p>
+				</div>
+				<ChevronRight size={20} className="text-zinc-300 dark:text-zinc-600" />
+			</button>
+
 			{/* Menu page */}
 			<button
 				onClick={() => setActiveTab(ActiveTab.ANALYTIC)}

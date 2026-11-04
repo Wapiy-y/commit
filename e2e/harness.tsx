@@ -1,8 +1,10 @@
-import { StrictMode } from "react";
+import React, { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import "@/index.css";
 import { BillFormModal } from "@/components/BillFormModal";
 import i18n from "@/locale/i18n";
+import type { ActiveTab } from "@/type";
+import Menu from "@/view/Menu";
 import Vehicle from "@/view/Vehicle";
 
 // Force English so assertions match literal strings instead of depending on the
@@ -19,11 +21,33 @@ el.innerHTML = "";
 const t = i18n.t.bind(i18n) as never;
 const view = new URLSearchParams(window.location.search).get("view");
 
+/** Menu with stubbed handlers; selecting a row reports where it would navigate. */
+function MenuHarness() {
+	const [target, setTarget] = React.useState<string>("none");
+	return (
+		<>
+			<p data-testid="target">{`target:${target}`}</p>
+			<Menu
+				setActiveTab={(tab: ActiveTab) => setTarget(tab)}
+				logout={() => undefined}
+				user={{ email: "e2e@example.com", name: "E2E" }}
+				toggleLanguage={() => undefined}
+				t={i18n.t.bind(i18n) as never}
+				i18n={i18n}
+				isDark={false}
+				toggleTheme={() => undefined}
+			/>
+		</>
+	);
+}
+
 ReactDOM.createRoot(el).render(
 	<StrictMode>
 		<div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 p-4">
 			<div className="max-w-md mx-auto">
-				{view === "bill" || view === "edit-bill" ? (
+				{view === "menu" ? (
+					<MenuHarness />
+				) : view === "bill" || view === "edit-bill" ? (
 					<BillFormModal
 						mode={view === "edit-bill" ? "edit" : "create"}
 						initialValues={

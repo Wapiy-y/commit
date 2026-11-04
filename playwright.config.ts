@@ -10,6 +10,9 @@ export default defineConfig({
 	testDir: "./e2e",
 	fullyParallel: false,
 	workers: 1,
+	// Generous per-test timeout: the harness compiles on demand under vite dev,
+	// and a cold transform on a slow runner can take most of the default 30s.
+	timeout: 60_000,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
 	reporter: process.env.CI ? "github" : "list",
