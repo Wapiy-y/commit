@@ -36,3 +36,8 @@ dist/
 
 # tsc -b build info
 tsconfig.tsbuildinfo
+
+# Playwright / e2e harness output
+test-results/
+playwright-report/
+e2e/dist/

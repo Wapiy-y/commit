@@ -60,6 +60,7 @@ export function ServiceFormModal({
 				km: formatKm(vehicle.current_mileage),
 			})}`}
 			onClose={onClose}
+			onSubmit={handleSubmit}
 			footer={
 				<FormActions
 					onCancel={onClose}
@@ -70,7 +71,7 @@ export function ServiceFormModal({
 				/>
 			}
 		>
-			<form onSubmit={handleSubmit} id="service-form" className="space-y-4">
+			<div className="space-y-4">
 				<FormError message={error} />
 				{entered > 0 && entered < vehicle.current_mileage && (
 					<FormWarning
@@ -81,8 +82,9 @@ export function ServiceFormModal({
 				)}
 
 				<div className="grid grid-cols-2 gap-3">
-					<FormField label={t("service_date")}>
+					<FormField label={t("service_date")} htmlFor="service-date">
 						<input
+							id="service-date"
 							type="date"
 							required
 							value={form.serviced_on}
@@ -92,8 +94,9 @@ export function ServiceFormModal({
 							className={inputClass}
 						/>
 					</FormField>
-					<FormField label={t("service_mileage")}>
+					<FormField label={t("service_mileage")} htmlFor="service-mileage">
 						<input
+							id="service-mileage"
 							type="number"
 							min="0"
 							step="1"
@@ -115,36 +118,39 @@ export function ServiceFormModal({
 					</p>
 				)}
 
-				<FormField label={t("service_workshop")}>
+				<FormField label={t("service_workshop")} htmlFor="service-workshop">
 					<input
 						value={form.workshop}
 						onChange={(e) => setForm({ ...form, workshop: e.target.value })}
+						id="service-workshop"
 						placeholder="Perodua Service Centre"
 						className={inputClass}
 					/>
 				</FormField>
 
-				<FormField label={t("service_cost")}>
+				<FormField label={t("service_cost")} htmlFor="service-cost">
 					<input
 						type="number"
 						min="0"
 						step="0.01"
 						value={form.cost}
 						onChange={(e) => setForm({ ...form, cost: e.target.value })}
+						id="service-cost"
 						placeholder="320.00"
 						className={inputClass}
 					/>
 				</FormField>
 
-				<FormField label={t("service_notes")}>
+				<FormField label={t("service_notes")} htmlFor="service-notes">
 					<input
 						value={form.notes}
 						onChange={(e) => setForm({ ...form, notes: e.target.value })}
+						id="service-notes"
 						placeholder={t("service_notes_placeholder")}
 						className={inputClass}
 					/>
 				</FormField>
-			</form>
+			</div>
 		</ModalShell>
 	);
 }

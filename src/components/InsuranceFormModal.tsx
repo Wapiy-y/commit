@@ -83,6 +83,7 @@ export function InsuranceFormModal({
 			title={current ? t("insurance_renew") : t("insurance_add")}
 			subtitle={current ? t("insurance_renew_hint") : undefined}
 			onClose={onClose}
+			onSubmit={handleSubmit}
 			footer={
 				<FormActions
 					onCancel={onClose}
@@ -93,7 +94,7 @@ export function InsuranceFormModal({
 				/>
 			}
 		>
-			<form onSubmit={handleSubmit} id="insurance-form" className="space-y-4">
+			<div className="space-y-4">
 				<FormError message={error} />
 				{gapDays > 0 && (
 					<FormWarning
@@ -101,30 +102,36 @@ export function InsuranceFormModal({
 					/>
 				)}
 
-				<FormField label={t("insurance_provider")}>
+				<FormField label={t("insurance_provider")} htmlFor="insurance-provider">
 					<input
 						required
 						value={form.provider}
 						onChange={(e) => setForm({ ...form, provider: e.target.value })}
+						id="insurance-provider"
 						placeholder="Etiqa General Insurance"
 						className={inputClass}
 					/>
 				</FormField>
 
 				<div className="grid grid-cols-2 gap-3">
-					<FormField label={t("insurance_policy")}>
+					<FormField label={t("insurance_policy")} htmlFor="insurance-policy">
 						<input
 							required
 							value={form.policy_number}
 							onChange={(e) =>
 								setForm({ ...form, policy_number: e.target.value })
 							}
+							id="insurance-policy"
 							placeholder="P90-0021-99381"
 							className={`${inputClass} font-mono`}
 						/>
 					</FormField>
-					<FormField label={t("insurance_coverage")}>
+					<FormField
+						label={t("insurance_coverage")}
+						htmlFor="insurance-coverage"
+					>
 						<select
+							id="insurance-coverage"
 							value={form.coverage_type}
 							onChange={(e) =>
 								setForm({
@@ -144,8 +151,9 @@ export function InsuranceFormModal({
 				</div>
 
 				<div className="grid grid-cols-2 gap-3">
-					<FormField label={t("insurance_start")}>
+					<FormField label={t("insurance_start")} htmlFor="insurance-start">
 						<input
+							id="insurance-start"
 							type="date"
 							required
 							value={form.start_date}
@@ -153,8 +161,9 @@ export function InsuranceFormModal({
 							className={inputClass}
 						/>
 					</FormField>
-					<FormField label={t("insurance_expiry")}>
+					<FormField label={t("insurance_expiry")} htmlFor="insurance-expiry">
 						<input
+							id="insurance-expiry"
 							type="date"
 							required
 							value={form.expiry_date}
@@ -166,18 +175,19 @@ export function InsuranceFormModal({
 					</FormField>
 				</div>
 
-				<FormField label={t("insurance_premium")}>
+				<FormField label={t("insurance_premium")} htmlFor="insurance-premium">
 					<input
 						type="number"
 						min="0"
 						step="0.01"
 						value={form.premium_paid}
 						onChange={(e) => setForm({ ...form, premium_paid: e.target.value })}
+						id="insurance-premium"
 						placeholder="650.50"
 						className={inputClass}
 					/>
 				</FormField>
-			</form>
+			</div>
 		</ModalShell>
 	);
 }

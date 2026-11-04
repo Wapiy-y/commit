@@ -62,6 +62,7 @@ export function VehicleFormModal({
 		<ModalShell
 			title={isEdit ? t("vehicle_edit") : t("vehicle_add")}
 			onClose={onClose}
+			onSubmit={handleSubmit}
 			footer={
 				<FormActions
 					onCancel={onClose}
@@ -72,21 +73,23 @@ export function VehicleFormModal({
 				/>
 			}
 		>
-			<form onSubmit={handleSubmit} id="vehicle-form" className="space-y-4">
+			<div className="space-y-4">
 				<FormError message={error} />
 
-				<FormField label={t("vehicle_plate")}>
+				<FormField label={t("vehicle_plate")} htmlFor="vehicle-plate">
 					<input
 						required
 						value={form.plate_number}
 						onChange={(e) => setForm({ ...form, plate_number: e.target.value })}
+						id="vehicle-plate"
 						placeholder="VGD 8899"
 						className={`${inputClass} font-mono uppercase`}
 					/>
 				</FormField>
 
-				<FormField label={t("vehicle_type_label")}>
+				<FormField label={t("vehicle_type_label")} htmlFor="vehicle-type">
 					<select
+						id="vehicle-type"
 						value={form.vehicle_type}
 						onChange={(e) =>
 							setForm({
@@ -102,20 +105,22 @@ export function VehicleFormModal({
 				</FormField>
 
 				<div className="grid grid-cols-2 gap-3">
-					<FormField label={t("vehicle_brand")}>
+					<FormField label={t("vehicle_brand")} htmlFor="vehicle-brand">
 						<input
 							required
 							value={form.brand}
 							onChange={(e) => setForm({ ...form, brand: e.target.value })}
+							id="vehicle-brand"
 							placeholder="Perodua"
 							className={inputClass}
 						/>
 					</FormField>
-					<FormField label={t("vehicle_model")}>
+					<FormField label={t("vehicle_model")} htmlFor="vehicle-model">
 						<input
 							required
 							value={form.model}
 							onChange={(e) => setForm({ ...form, model: e.target.value })}
+							id="vehicle-model"
 							placeholder="Myvi 1.5 AV"
 							className={inputClass}
 						/>
@@ -124,11 +129,13 @@ export function VehicleFormModal({
 
 				<div className="grid grid-cols-2 gap-3">
 					<FormField
+						htmlFor="vehicle-mileage"
 						label={t("vehicle_mileage")}
 						hint={isEdit ? t("vehicle_mileage_edit_hint") : undefined}
 					>
 						<input
 							type="number"
+							id="vehicle-mileage"
 							min="0"
 							step="1"
 							value={form.current_mileage}
@@ -141,9 +148,10 @@ export function VehicleFormModal({
 							className={`${inputClass} disabled:opacity-50`}
 						/>
 					</FormField>
-					<FormField label={t("vehicle_interval")}>
+					<FormField label={t("vehicle_interval")} htmlFor="vehicle-interval">
 						<input
 							type="number"
+							id="vehicle-interval"
 							min="1000"
 							step="1000"
 							value={form.service_interval}
@@ -154,7 +162,7 @@ export function VehicleFormModal({
 						/>
 					</FormField>
 				</div>
-			</form>
+			</div>
 		</ModalShell>
 	);
 }
