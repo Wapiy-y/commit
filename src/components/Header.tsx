@@ -15,6 +15,7 @@ interface HeaderProps {
 const TITLE_KEY: Record<ActiveTab, string> = {
 	[ActiveTab.HOME]: "home_title",
 	[ActiveTab.BILL]: "bill_title",
+	[ActiveTab.VEHICLE]: "vehicle_title",
 	[ActiveTab.RECORD]: "record_title",
 	[ActiveTab.MENU]: "menu_title",
 	[ActiveTab.ANALYTIC]: "analytics_title",
@@ -35,9 +36,14 @@ export const Header = ({
 				</h1>
 				{/* Record shows the whole history, grouped by month, so the month
 				    picker would have nothing to select. */}
-				{activeTab !== ActiveTab.MENU && activeTab !== ActiveTab.RECORD && (
-					<MonthPicker currentDate={currentDate} onSelectDate={onSelectDate} />
-				)}
+				{activeTab !== ActiveTab.MENU &&
+					activeTab !== ActiveTab.RECORD &&
+					activeTab !== ActiveTab.VEHICLE && (
+						<MonthPicker
+							currentDate={currentDate}
+							onSelectDate={onSelectDate}
+						/>
+					)}
 			</div>
 		</header>
 	);

@@ -79,7 +79,7 @@ jobs:
             "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;")
           echo "$tables"
 
-          for expected in bills payments bill_activity; do
+          for expected in bills payments bill_activity vehicles vehicle_insurance vehicle_service; do
             if ! printf '%s\n' "$tables" | grep -qx "$expected"; then
               echo "::error::Expected table '${expected}' was not created."
               exit 1
@@ -117,3 +117,11 @@ jobs:
           # a prev_amount chain, payment rows surviving a soft delete, and a
           # rejected activity insert rolling back the bill change with it.
           psql -d schema_ci_scratch -v ON_ERROR_STOP=1 -f .github/activity-smoke.sql
+
+      - name: Verify vehicle workflows are atomic
+        run: |
+          set -euo pipefail
+          # Insurance renewal (retire then insert, one transaction), service
+          # logging (event + odometer + next milestone together), the one-active-
+          # policy index, and rejection of a backwards odometer.
+          psql -d schema_ci_scratch -v ON_ERROR_STOP=1 -f .github/vehicle-smoke.sql
