@@ -4,14 +4,18 @@
 -- stub and src/db/script.sql. It executes the same statements the API runs and
 -- asserts the two multi-step workflows land completely or not at all.
 
-INSERT INTO neon_auth."user" (id) VALUES ('11111111-1111-1111-1111-111111111111');
+-- A distinct user id from activity-smoke.sql, with ON CONFLICT for safety: the
+-- Schema workflow applies every smoke file to the same scratch database, so a
+-- shared id fails with a duplicate key (which is exactly how this was caught).
+INSERT INTO neon_auth."user" (id) VALUES ('22222222-2222-2222-2222-222222222222')
+ON CONFLICT DO NOTHING;
 
 -- ── create ────────────────────────────────────────────────────────────────────
 INSERT INTO vehicles (
   user_id, plate_number, vehicle_type, brand, model,
   current_mileage, mileage_updated_at, service_interval, next_service_mileage
 ) VALUES (
-  '11111111-1111-1111-1111-111111111111', 'VGD 8899', 'car', 'Perodua', 'Myvi 1.5 AV',
+  '22222222-2222-2222-2222-222222222222', 'VGD 8899', 'car', 'Perodua', 'Myvi 1.5 AV',
   45200, '2026-11-04', 10000, 55200
 );
 
@@ -34,7 +38,7 @@ BEGIN
     -- cannot do this: the partial unique index needs the retire to be visible to
     -- the insert, and sibling CTEs share one snapshot.
     UPDATE vehicle_insurance SET superseded_at = now()
-    WHERE vehicle_id = 1 AND user_id = '11111111-1111-1111-1111-111111111111'
+    WHERE vehicle_id = 1 AND user_id = '22222222-2222-2222-2222-222222222222'
       AND superseded_at IS NULL;
 
     INSERT INTO vehicle_insurance (
@@ -42,7 +46,7 @@ BEGIN
       start_date, expiry_date, premium_paid
     )
     VALUES (
-      '11111111-1111-1111-1111-111111111111', 1, run.provider, run.policy,
+      '22222222-2222-2222-2222-222222222222', 1, run.provider, run.policy,
       run.coverage, run.starts, run.expires, run.premium
     );
   END LOOP;
@@ -62,7 +66,7 @@ BEGIN
     user_id, vehicle_id, provider, policy_number, coverage_type,
     start_date, expiry_date, premium_paid
   ) VALUES (
-    '11111111-1111-1111-1111-111111111111', 1, 'Duplicate', 'DUP-1',
+    '22222222-2222-2222-2222-222222222222', 1, 'Duplicate', 'DUP-1',
     'comprehensive', '2028-01-01', '2029-01-01', 1
   );
   RAISE EXCEPTION 'a second active policy was accepted — the partial unique index is missing';
@@ -76,7 +80,7 @@ WITH ins AS (
     user_id, vehicle_id, serviced_on, mileage_at_service, workshop, cost, notes
   )
   SELECT
-    '11111111-1111-1111-1111-111111111111', 1, '2026-11-04', 50000,
+    '22222222-2222-2222-2222-222222222222', 1, '2026-11-04', 50000,
     'Perodua Service Centre', 320.00, 'Full service'
   WHERE EXISTS (
     SELECT 1 FROM vehicles v
@@ -90,7 +94,7 @@ WITH ins AS (
       COALESCE(v.mileage_updated_at, '2026-11-04'::date), '2026-11-04'::date
     ),
     next_service_mileage = 50000 + v.service_interval
-  WHERE v.id = 1 AND v.user_id = '11111111-1111-1111-1111-111111111111'
+  WHERE v.id = 1 AND v.user_id = '22222222-2222-2222-2222-222222222222'
     AND v.is_active = true
     AND 50000 >= v.current_mileage
   RETURNING v.id, v.current_mileage, v.next_service_mileage
@@ -113,7 +117,7 @@ BEGIN
     INSERT INTO vehicle_service (
       user_id, vehicle_id, serviced_on, mileage_at_service
     )
-    SELECT '11111111-1111-1111-1111-111111111111', 1, '2026-10-01', 40000
+    SELECT '22222222-2222-2222-2222-222222222222', 1, '2026-10-01', 40000
     WHERE EXISTS (
       SELECT 1 FROM vehicles v WHERE v.id = 1 AND v.is_active = true
         AND 40000 >= v.current_mileage
