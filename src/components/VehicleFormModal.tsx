@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import type React from "react";
 import { useState } from "react";
+import { formatKm } from "@/lib/vehicle-status";
 import type { NewVehicle, Vehicle } from "@/type";
 import { FormActions, FormError, FormField, inputClass } from "./FormBits";
 import { ModalShell } from "./ModalShell";
@@ -43,6 +44,11 @@ export function VehicleFormModal({
 	);
 	const [isSaving, setIsSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	// Shown as the hint under the interval field, so the field's meaning ("every
+	// N km") is visible as the resulting target ("next at X km").
+	const mileage = Number(form.current_mileage || 0);
+	const interval = Number(form.service_interval || 0);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -148,12 +154,25 @@ export function VehicleFormModal({
 							className={`${inputClass} disabled:opacity-50`}
 						/>
 					</FormField>
-					<FormField label={t("vehicle_interval")} htmlFor="vehicle-interval">
+					<FormField
+						label={t("vehicle_interval")}
+						htmlFor="vehicle-interval"
+						hint={
+							interval > 0
+								? t("vehicle_interval_hint", {
+										km: formatKm(mileage + interval),
+									})
+								: undefined
+						}
+					>
 						<input
 							type="number"
 							id="vehicle-interval"
-							min="1000"
-							step="1000"
+							// Any positive whole number, matching the API. step="1000" refused
+							// real intervals like 1700 with a native "enter a valid value"
+							// bubble before the form could even submit.
+							min="1"
+							step="1"
 							value={form.service_interval}
 							onChange={(e) =>
 								setForm({ ...form, service_interval: e.target.value })

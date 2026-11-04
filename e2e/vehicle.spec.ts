@@ -46,6 +46,30 @@ test("adds a vehicle through the modal", async ({ page }) => {
 	await expect(page.getByText("Toyota Vios 1.5 G")).toBeVisible();
 });
 
+test("accepts a service interval that is not a round thousand", async ({
+	page,
+}) => {
+	// Regression: the interval field had step="1000", so the browser rejected
+	// 1700 with a native "enter a valid value" bubble and the form never
+	// submitted — even though the API accepts any positive whole number.
+	await page.getByRole("button", { name: "Add vehicle" }).click();
+	await page.getByLabel("Plate number").fill("JHR 7002");
+	await page.getByLabel("Brand").fill("Modenas");
+	await page.getByLabel("Model").fill("Kriss 110");
+	await page.getByLabel("Odometer (km)").fill("3400");
+	await page.getByLabel("Service every (km)").fill("1700");
+
+	// The hint makes the field's meaning visible: every 1,700 from 3,400.
+	await expect(page.getByText("Next service at 5,100 km")).toBeVisible();
+
+	await page.getByRole("button", { name: "Save vehicle" }).click();
+	await expect(page.getByText("JHR 7002")).toBeVisible();
+
+	// And the target it computed survives into the detail screen.
+	await page.getByText("JHR 7002").click();
+	await expect(page.getByText(/every 1,700 km/)).toBeVisible();
+});
+
 test("refuses an empty form without closing", async ({ page }) => {
 	await page.getByRole("button", { name: "Add vehicle" }).click();
 	// Plate/brand/model are required, so the browser blocks submission and the
